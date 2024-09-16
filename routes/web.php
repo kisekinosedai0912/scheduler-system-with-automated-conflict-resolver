@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SchedulesController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Events\CalendarEventsController;
@@ -41,3 +42,4 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::put('/calendar/{id}/resize', [CalendarEventsController::class, 'resizeEvent']);
     Route::put('/calendar/search', [CalendarEventsController::class, 'searchEvent']);
 });
+

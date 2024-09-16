@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('studentNumber');
             $table->string('yearSection');
             $table->string('room');
-            $table->time('time');
-            $table->date('date');
+            $table->time('startTime');
+            $table->time('endTime');
         });
     }
 

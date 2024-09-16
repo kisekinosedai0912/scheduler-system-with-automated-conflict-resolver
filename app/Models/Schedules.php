@@ -16,7 +16,7 @@ class Schedules extends Model
         'studentNumber',
         'yearSection',
         'room',
-        'time',
-        'date'
+        'startTime',
+        'endTime'
     ];
 }
