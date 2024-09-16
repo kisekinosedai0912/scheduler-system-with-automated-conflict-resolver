@@ -18,6 +18,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @yield('styles')
     </head>
     <body class="font-sans antialiased top-0 fixed min-h-screen w-screen bg-gray-100 dark:bg-gray-900">
         @include('layouts.sidebar')

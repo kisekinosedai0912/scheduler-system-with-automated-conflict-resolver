@@ -10,7 +10,7 @@
             <input type="search" placeholder="search classroom" class="w-full h-10 pl-10 pr-4 px-1.5 text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300">
         </div>
 
-        <div class="buttons flex items-center justify-end gap-2 w-80 mt-2">
+        <div class="buttons flex items-center justify-end gap-2 w-80">
             {{-- Print button --}}
             <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-2 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active">
                 <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -84,7 +84,7 @@
                 <th scope="col">Classroom Number</th>
                 <th scope="col">Building Number</th>
                 <th scope="col">Floor Number</th>
-                <th scope="col"></th>
+                <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -93,8 +93,8 @@
                     <td>Building 4</td>
                     <td>2nd Floor</td>
                     <td>
-                        <a href="" class="btn btn-success"><i class="fas fa-pencil"></i></a>
-                        <a href="" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                        <a href="" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900"><i class="fas fa-gear"></i></a>
+                        <a href="" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
                 <tr>
@@ -102,8 +102,8 @@
                     <td>Building 4</td>
                     <td>2nd Floor</td>
                     <td>
-                        <a href="" class="btn btn-success"><i class="fas fa-pencil"></i></a>
-                        <a href="" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                        <a href="" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900"><i class="fas fa-gear"></i></a>
+                        <a href="" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
                 <tr>
@@ -111,8 +111,8 @@
                     <td>Building 4</td>
                     <td>2nd Floor</td>
                     <td>
-                        <a href="" class="btn btn-success"><i class="fas fa-pencil"></i></a>
-                        <a href="" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                        <a href="" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900"><i class="fas fa-gear"></i></a>
+                        <a href="" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700"><i class="fas fa-trash"></i></a>
                     </td>
                 </tr>
             </tbody>

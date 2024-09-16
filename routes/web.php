@@ -4,9 +4,10 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Events\CalendarEventsController;
 
 Route::get('/', function () {
-    return view('index');
+    return view('welcome');
 });
 
 Route::middleware('auth')->group(function () {
@@ -30,4 +31,13 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/dashboard/teachers', [AdminController::class, 'teachers'])->name('admin.teachers');
     Route::get('/admin/dashboard/classroom', [AdminController::class, 'classroom'])->name('admin.classroom');
     Route::get('/admin/dashboard/users', [AdminController::class, 'users'])->name('admin.users');
+});
+
+// Routes for calendar of events
+Route::middleware(['auth', 'adminMiddleware'])->group(function () {
+    Route::get('/calendar/events', [CalendarEventsController::class, 'getCalendarEvents']);
+    Route::delete('/calendar/event/{id}', [CalendarEventsController::class, 'deleteCalendarEvents']);
+    Route::put('/calendar/event/{id}', [CalendarEventsController::class, 'updateCalendarEvents']);
+    Route::put('/calendar/{id}/resize', [CalendarEventsController::class, 'resizeEvent']);
+    Route::put('/calendar/search', [CalendarEventsController::class, 'searchEvent']);
 });
