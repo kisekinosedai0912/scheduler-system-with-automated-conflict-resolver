@@ -38,7 +38,11 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     
     // Routes for the teachers page
     Route::get('/admin/dashboard/teachers', [AdminController::class, 'teacher'])->name('admin.teacher');
-    
+    Route::post('/admin/dashboard/classroom/create-load', [AdminController::class, 'createLoad'])->name('admin.createLoad');
+    Route::get('/admin/dashboard/{classroom}/edit-load', [AdminController::class, 'editLoad'])->name('admin.editLoad');
+    Route::put('/admin/dashboard/{classroom}/update-load', [AdminController::class, 'updateLoad'])->name('admin.updateLoad');
+    Route::delete('/admin/dashboard/{classroom}/delete-load', [AdminController::class, 'deleteLoad'])->name('admin.deleteLoad');
+
     // Routes for the classroom page
     Route::get('/admin/dashboard/classroom', [AdminController::class, 'classroom'])->name('admin.classroom');
     Route::post('/admin/dashboard/classroom/create-room', [AdminController::class, 'createRoom'])->name('admin.createRoom');

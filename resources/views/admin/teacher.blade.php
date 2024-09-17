@@ -1,5 +1,9 @@
 <x-app-layout>
     @section('title', 'Scheduler System with Automated Nursery System')
+    @section('styles')
+        {{-- Sweet alert 2 css link --}}
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
+    @endsection
     @section('title-pane', "Teacher's Loading")
 
     <div class="outer-container flex flex-col md:flex-row items-center justify-between bg-white px-2 rounded-md">
@@ -50,16 +54,23 @@
                     </div>
                     {{-- Modal body --}}
                     <div class="modal-body">
-                        <form action="" method="post" name="teachersForm" id="teachers-form">
+                        <form action="{{ route('admin.createLoad') }}" method="post" name="teachersForm" id="teachers-form">
                             @csrf
                             @method('post')
 
                             <div class="mb-3">
-                                <input type="text" name="teachertName" id="teacher-name" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="Teacher's Name: ">
+                                <input type="text" name="teacherName" id="teacher-name" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="Teacher's Name: ">
                             </div>
+
                             <div class="mb-3">
-                                <input type="text" name="subjectName" id="subject-name" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="Subject Name: ">
+                                <select name="subjectName" id="subject-name" class="form-control col-span-2 w-full p-2 rounded-md">
+                                    <option value="">Subjects</option>
+                                    @foreach($subjects as $subject)
+                                        <option value="{{ $subject->subjectName }}">{{ $subject->subjectName }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+
                             <div class="mb-3">
                                 <input type="text" name="numberHours" id="number-hours" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="No. of Hours: ">
                             </div>
@@ -67,19 +78,20 @@
                             {{-- Modal buttons --}}
                             <div class="modal-button flex items-center justify-end gap-2 mt-3">
                                 <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg" data-bs-dismiss="modal">Save</button>
+                                <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Add Load</button>
                             </div>
                         </form>
-					</div>
+                    </div>
                 </div>
             </div>
         </div>
+        @include('admin-modals.editTeacher')
     </div>
 
     <hr class="my-2">
     {{-- Table --}}
     <span class="hidden md:block">
-        <table class="table shadow-sm">
+        <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
                     <th scope="col">Teacher's Name</th>
@@ -89,15 +101,25 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="font-normal">Eric Coles</td>
-                    <td class="font-normal">Event Driven Programming</td>
-                    <td class="font-normal">2 Hours</td>
-                    <td>
-                        <a href="" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900"><i class="fas fa-gear"></i></a>
-                        <a href="" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700"><i class="fas fa-trash"></i></a>
-                    </td>
-                </tr>
+                @foreach ($teachers as $teacher)
+                    <tr>
+                        <td>{{ $teacher->teacherName }}</td>
+                        <td>{{ $teacher->subjectName }}</td> 
+                        <td>{{ $teacher->numberHours }}</td>
+                        <td class="flex items-center justify-start">
+                            <a href="{{ route('admin.editLoad', $teacher->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editTeacher-{{ $teacher->id }}">
+                                <i class="fas fa-gear"></i>
+                            </a>
+                            <form action="{{ route('admin.deleteLoad', $teacher->id) }}" method="POST" id="delete-form-{{ $teacher->id }}">
+                                @csrf
+                                @method('DELETE')
+                                <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-form-{{ $teacher->id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
     </span>
@@ -133,4 +155,77 @@
             </tbody>
         </table>
     </span>
+
+    @section('scripts')
+        {{-- Sweet alert 2 script --}}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+        @if(session('error'))
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}"
+                });
+            </script>
+        @endif
+
+        @if(session('success'))
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}"
+                });
+            </script>
+        @endif
+
+        {{-- Validation error handling --}}
+        @if($errors->any())
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    html: `
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    `
+                });
+            </script>
+        @endif
+
+        <script>
+            const typeSubject = document.getElementById('subject-name');
+
+            typeSubject.addEventListener('input', function(e) {
+                const filter = e.target.value.toLowerCase();
+                const options = e.target.querySelectorAll('option');
+
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    option.style.display = text.includes(filter) ? 'block' : 'none';
+                });
+            });
+
+            function confirmDeletion(event, formId) {
+                event.preventDefault(); 
+        
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#223a5e',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            }
+        </script>
+    @endsection
 </x-app-layout>

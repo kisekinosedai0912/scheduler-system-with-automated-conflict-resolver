@@ -80,7 +80,7 @@
     <hr class="my-2">
 
     <span class="hidden md:block">
-        <table class="table shadow-sm">
+        <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
                     <th scope="col">Classroom Number</th>

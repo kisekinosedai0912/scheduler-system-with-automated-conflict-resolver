@@ -6,6 +6,7 @@ use App\Models\Classroom;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
 use App\Models\Subjects;
+use App\Models\Teachers;
 
 class AdminController extends Controller
 {
@@ -75,21 +76,85 @@ class AdminController extends Controller
             $subject->delete();
 
         else 
-            return redirect()->route('admin.subjects')->with('error', 'Subject not found.');
+            return redirect()->route('admin.subjects')->with('error', 'Record not found.');
 
-        return redirect()->route('admin.subjects')->with('success', 'Subject deleted successfully.');
+        return redirect()->route('admin.subjects')->with('success', 'Record deleted successfully.');
     }
 
     // Function for returning view in the teacher loads page of the admin dashboard
     public function teacher() {
-        return view('admin.teacher');
+        $teachers = Teachers::all();
+        $subjects = Subjects::all(); 
+
+        return view('admin.teacher', [
+            'teachers' => $teachers,
+            'subjects' => $subjects
+        ]);
     }
+    
+    // Function for adding new teacher loads
+    public function createLoad(Request $request) {
+        $loadData = $request->validate([
+            'teacherName' => 'required|string',
+            'subjectName' => 'required|string',
+            'numberHours' => 'required|integer'
+        ]);
+    
+        try {
+            Teachers::create($loadData);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+        return redirect()->route('admin.teacher')->with('success', 'Load added successfully!');
+    }
+    
+    // Function for editing teacher loads
+    public function editLoad(Teachers $teachers) {
+        return view('admin-modals.editTeacher', ['teachers' => $teachers]);
+    }
+
+    // Function for updating teacher loads
+    public function updateLoad(Request $request, $id) {
+        $loadData = $request->validate([
+            'teacherName' => 'required|string',
+            'subjectName' => 'required|string',
+            'numberHours' => 'required|integer'
+        ]);
+    
+        try {
+            $teacher = Teachers::findOrFail($id);
+            $teacher->update($loadData);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    
+        return redirect()->back()->with('success', 'Load updated successfully!');
+    }
+    
+    // Function for load deletion in the database
+    public function deleteLoad($id) {
+        try {
+            $loadData =Teachers::findOrFail($id);
+            $loadData->delete();
+
+            return redirect()->route('admin.teacher')->with('success', 'Record deleted successfully.');
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.teacher')->with('error', 'Error: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.teacher')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
+        }
+    }
+
+
+    // Function for returning view in the classroom page
     public function classroom() {
         $rooms = Classroom::all();
         return view('admin.classroom', ['rooms' => $rooms]);
     }
     
-    // Function for creating rooms in the database
+    // Function for creating rooms in the database 
     public function createRoom(Request $request) {
         $roomData = $request->validate([
             'classroomNumber' => 'required|string',
@@ -99,7 +164,6 @@ class AdminController extends Controller
     
         try {
             Classroom::create($roomData);
-           
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
@@ -135,13 +199,13 @@ class AdminController extends Controller
             $classroom = Classroom::findOrFail($id);
             $classroom->delete();
 
-            return redirect()->route('admin.classroom')->with('success', 'Subject deleted successfully.');
+            return redirect()->route('admin.classroom')->with('success', 'Record deleted successfully.');
             
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return redirect()->route('admin.classroom')->with('error', 'Error: ' . $e->getMessage());
             
         } catch (\Exception $e) {
-            return redirect()->route('admin.classroom')->with('error', 'Error occurred while deleting the subject: ' . $e->getMessage());
+            return redirect()->route('admin.classroom')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
         }
     }
     
