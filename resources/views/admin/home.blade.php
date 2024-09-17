@@ -80,7 +80,7 @@
                     <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
                     <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
                     </svg>
-                    <input type="search" id="search-button" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300 rounded-sm">
+                    <input type="search" id="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300 rounded-sm">
                 </div>
   
 
@@ -148,7 +148,6 @@
         
         <script>
             $(document).ready(function() {
-                const searchBtn = document.getElementById('search-button');
                 const printBtn = document.getElementById('print-button');
                 const calendarElement = document.getElementById('calendar');
 
@@ -193,7 +192,7 @@
                                 const eventId = info.event.id;
                                 $.ajax({
                                     method: 'DELETE',
-                                    url: '/calendar/event/' + eventId,
+                                    url: `/calendar/event/${eventId}`,
                                     success() {
                                         alert('Event deleted successfully!');
                                         calendar.refetchEvents();
@@ -204,6 +203,7 @@
                                 });
                             }
                         });
+
                         return { domNodes: [eventElement] };
                     },
 
@@ -245,15 +245,19 @@
                                 console.log('Error resizing current event.', error);
                             }
                         });
+
                     }
                 });
 
                 calendar.render();
-
-                searchBtn.addEventListener('click', () => {
-                    const searchEvent = document.getElementById('search').value.toLowerCase();
-                    displaySearchedEvents(searchEvent);
+                // Fetching searched events on the search bar
+                $('#search').on('keypress', function (e) {
+                    if (e.which === 13) { 
+                        const searchEvent = $(this).val().toLowerCase();
+                        displaySearchedEvents(searchEvent);
+                    }
                 });
+
 
                 // Function for search
                 const displaySearchedEvents = searchEvent => {
@@ -277,31 +281,25 @@
                 }
 
                 printBtn.addEventListener('click', () => {
-                    const events = calendar.getEvents().map((event) => ({
+                    const events = calendar.getEvents();
+                    
+                    if (events.length === 0) {
+                        alert('No events to export.');
+                        return;
+                    }
+
+                    const formattedEvents = events.map(event => ({
                         title: event.title,
-                        start: event.start,
-                        end: event.end ? event.end.toISOString() : null,
+                        start: event.start ? event.start.toISOString().slice(0, 10) : '',
+                        end: event.end ? event.end.toISOString().slice(0, 10) : 'N/A',
                         color: event.backgroundColor,
                     }));
 
                     const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.json_to_sheet(events);
-
+                    const ws = XLSX.utils.json_to_sheet(formattedEvents);
                     XLSX.utils.book_append_sheet(wb, ws, 'Events');
 
-                    const arrayBuffer = XLSX.write(wb, {
-                        booktype: 'xlsx',
-                        type: 'array'
-                    });
-
-                    const blob = new Blob([arrayBuffer], {
-                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                    });
-
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = URL.createObjectURL(blob);
-                    downloadLink.download = 'events.xlsx';
-                    downloadLink.click();
+                    XLSX.writeFile(wb, 'events.xlsx');
                 });
             });
         </script>

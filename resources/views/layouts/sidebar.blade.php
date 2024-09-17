@@ -27,25 +27,28 @@
                 {{ __('Subjects') }}
             </x-nav-link>
         </div>
-        <hr class="border-t border-gray-950 my-2">
+
+        <hr class="border-t border-gray-950">
+
         <div class="nav-button flex items-center py-3 pl-4 transition-colors duration-200 cursor-pointer">
-            <i class="fas fa-user text-gray-950 w-6 ml-4"></i>
-            <x-nav-link :href="route('admin.teachers')" :active="request()->routeIs('admin.teachers')" class="transition duration-150 ease-in-out">
+            <i class="fas fa-chalkboard-teacher text-gray-950 w-6 ml-4"></i>
+            <x-nav-link :href="route('admin.teacher')" :active="request()->routeIs('admin.teacher')" class="transition duration-150 ease-in-out">
                 {{ __('Teachers') }}
             </x-nav-link>
         </div>
         <div class="nav-button flex items-center py-3 pl-4 transition-colors duration-200 cursor-pointer">
-            <i class="fas fa-door-open text-gray-950 w-6 ml-4"></i>
+            <i class="fas fa-chalkboard-teacher text-gray-950 w-6 ml-4"></i>
             <x-nav-link :href="route('admin.classroom')" :active="request()->routeIs('admin.classroom')" class="transition duration-150 ease-in-out">
                 {{ __('Classroom') }}
             </x-nav-link>
         </div>
         <div class="nav-button flex items-center py-3 pl-4 transition-colors duration-200 cursor-pointer">
-            <i class="fas fa-cogs text-gray-950 w-6 ml-4"></i>
+            <i class="fas fa-chalkboard-teacher text-gray-950 w-6 ml-4"></i>
             <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')" class="transition duration-150 ease-in-out">
                 {{ __('Users') }}
             </x-nav-link>
         </div>
+        
         <hr class="border-t border-gray-950">
     </div>
     <!-- Footer section for credits -->
