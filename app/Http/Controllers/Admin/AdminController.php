@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use App\Models\Classroom;
 use App\Models\Schedules;
 use Illuminate\Http\Request;
 use App\Models\Subjects;
@@ -25,7 +26,7 @@ class AdminController extends Controller
         return view('admin.subjects', ['subjects' => $subjects]);
     }
 
-    // Create subject function
+    // Function for creating subjects in the database
     public function createSubject(Request $request) {
         $data = $request->validate([
             'subjectName' => 'required|string',
@@ -50,16 +51,13 @@ class AdminController extends Controller
     // Function for updating the specific subject in the table
     public function updateSubject(Request $request, Subjects $subject)
     {
-        $request->validate([
+        $data = $request->validate([
             'subjectName' => 'required|string',
             'description' => 'nullable|string',
         ]);
         
         try {
-            $subject->update([
-                'subjectName' => $request->input('subjectName'),
-                'description' => $request->input('description'),
-            ]);
+            $subject->update($data);
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
@@ -87,8 +85,72 @@ class AdminController extends Controller
         return view('admin.teacher');
     }
     public function classroom() {
-        return view('admin.classroom');
+        $rooms = Classroom::all();
+        return view('admin.classroom', ['rooms' => $rooms]);
     }
+    
+    // Function for creating rooms in the database
+    public function createRoom(Request $request) {
+        $roomData = $request->validate([
+            'classroomNumber' => 'required|string',
+            'buildingNumber' => 'nullable|string',
+            'floorNumber' => 'nullable|string'
+        ]);
+    
+        try {
+            Classroom::create($roomData);
+           
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+        return redirect()->route('admin.classroom')->with('success', 'Classroom added successfully!');
+    }
+
+    // Function for viewing the edit modal
+    public function editRoom(Classroom $classroom) {
+        return view('admin-modals.editClassroom', ['classroom' => $classroom]);
+    }
+
+    // Function for updating the classroom details
+    public function updateRoom(Request $request, Classroom $classroom) {
+        $data = $request->validate([
+            'classroomNumber' => 'required|string',
+            'buildingNumber' => 'nullable|string',
+            'floorNumber' => 'nullable|string'
+        ]);
+        
+        try {
+            $classroom->update($data);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    
+        return redirect()->back()->with('success', 'Classroom updated successfully!');
+    }
+
+    // Function for deleting classroom
+    public function deleteRoom($id) {
+        try {
+            $classroom = Classroom::findOrFail($id);
+            $classroom->delete();
+
+            return redirect()->route('admin.classroom')->with('success', 'Subject deleted successfully.');
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.classroom')->with('error', 'Error: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.classroom')->with('error', 'Error occurred while deleting the subject: ' . $e->getMessage());
+        }
+    }
+    
+
+
+
+
+
+
     public function users() {
         return view('admin.users');
     }

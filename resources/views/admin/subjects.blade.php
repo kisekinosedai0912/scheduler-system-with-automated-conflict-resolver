@@ -43,7 +43,7 @@
             </button>
         </div>
 
-        <!--Post subject modal -->
+        <!-- subject modal -->
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -99,7 +99,7 @@
                             <a href="{{ route('admin.editSubject', $subject->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editModal-{{ $subject->id }}">
                                 <i class="fas fa-gear"></i>
                             </a>
-                            <form action="{{ route('admin.deleteSubject', $subject->id) }}" method="POST" id="delete-form-{{ $subject->id }}">
+                            <form action="{{ route('admin.deleteRoom', $subject->id) }}" method="POST" id="delete-form-{{ $subject->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-form-{{ $subject->id }}')">
@@ -206,7 +206,7 @@
                 text: "You won't be able to revert this!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#223a5e',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {

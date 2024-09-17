@@ -28,17 +28,26 @@ Route::middleware(['auth', 'userMiddleware'])->group(function () {
 Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/dashboard/home', [AdminController::class, 'adminIndex'])->name('admin.home');
     Route::get('/admin/dashboard/schedules', [AdminController::class, 'schedules'])->name('admin.schedules');
+    
     // Routes for the subject page
     Route::get('/admin/dashboard/subjects', [AdminController::class, 'subjects'])->name('admin.subjects');
     Route::post('/admin/dashboard/subjects/create', [AdminController::class, 'createSubject'])->name('admin.createSubject');
     Route::get('/admin/dashboard/{subject}/edit', [AdminController::class, 'editSubject'])->name('admin.editSubject');
     Route::put('/admin/dashboard/{subject}/update', [AdminController::class, 'updateSubject'])->name('admin.updateSubject');
     Route::delete('/admin/dashboard/{subject}/delete', [AdminController::class, 'deleteSubject'])->name('admin.deleteSubject');
+    
     // Routes for the teachers page
     Route::get('/admin/dashboard/teachers', [AdminController::class, 'teacher'])->name('admin.teacher');
+    
     // Routes for the classroom page
     Route::get('/admin/dashboard/classroom', [AdminController::class, 'classroom'])->name('admin.classroom');
-    // Routes for the classroom page
+    Route::post('/admin/dashboard/classroom/create-room', [AdminController::class, 'createRoom'])->name('admin.createRoom');
+    Route::get('/admin/dashboard/{classroom}/edit-room', [AdminController::class, 'editRoom'])->name('admin.editRoom');
+    Route::put('/admin/dashboard/{classroom}/update-room', [AdminController::class, 'updateRoom'])->name('admin.updateRoom');
+    Route::delete('/admin/dashboard/{classroom}/delete-room', [AdminController::class, 'deleteRoom'])->name('admin.deleteRoom');
+
+    
+    // Routes for the users page
     Route::get('/admin/dashboard/users', [AdminController::class, 'users'])->name('admin.users');
 
 });

@@ -15,7 +15,7 @@
                             @method('put')
 
                             <div class="mb-3">
-                            <input type="text" class="form-control" name="subjectName" id="subject-name-{{ $subject->id }}" value="{{ $subject->subjectName }}">
+                                <input type="text" class="form-control" name="subjectName" id="subject-name-{{ $subject->id }}" value="{{ $subject->subjectName }}" required>
                             </div>
                             <div class="mb-3">
                                 <textarea class="form-control col-span-2 w-full mt-4 pl-2 rounded-md bg-stone-200 scroll-py-1.5" name="description" id="description-{{ $subject->id }}">{{ $subject->description }}</textarea>
