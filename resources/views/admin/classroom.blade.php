@@ -113,6 +113,53 @@
         </table>
     </span>
 
+    {{-- Table for mobile --}}
+    <span class="block md:hidden">
+        <table class="table shadow-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Classroom Number</th>
+                    <th scope="col">Building Number</th>
+                    <th scope="col">Floor Number</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($rooms as $room)
+                    <tr>
+                        <td>{{ $room->classroomNumber }}</td>
+                        <td>{{ $room->buildingNumber }}</td>
+                        <td>{{ $room->floorNumber }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li class="pl-6">
+                                        <a href="{{ route('admin.editRoom', $room->id) }}" class="text-md hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#classroomEdit-{{ $room->id }}">
+                                            Edit
+                                        </a>
+                                    </li>
+                                    <li class="pl-6">
+                                        <form action="{{ route('admin.deleteRoom', $room->id) }}" method="post" id="delete-room-{{ $room->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <a href="#" class="text-md hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-room-{{ $room->id }}')">
+                                                Delete
+                                            </a>
+                                        </form> 
+                                    </li>
+                                </ul>
+                            </div>                      
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </span>
+
+
     @section('scripts')
         {{-- Sweet alert 2 script --}}
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
