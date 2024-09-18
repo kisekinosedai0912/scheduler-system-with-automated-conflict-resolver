@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
+    <form method="post" action="{{ route('auth.store_user') }}">
         @csrf
-
+        @method('post')
         <!-- Name -->
         <div>
             <x-input-label for="name" :value="__('Name')" />
@@ -14,15 +14,6 @@
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <!-- User Role Reserve -->
-        <div class="mt-4">
-            <x-input-label for="roleSelect" :value="__('Select Role')" />
-            <select name="user_role" id="roleSelect" class="form-select rounded-md" aria-label="Role Select">
-                <option value="faculty">Faculty</option>
-                <option value="admin">Admin</option>
-            </select>
         </div>
 
         <!-- Password -->
@@ -49,10 +40,6 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
             <x-primary-button class="ms-4">
                 {{ __('Register') }}
             </x-primary-button>

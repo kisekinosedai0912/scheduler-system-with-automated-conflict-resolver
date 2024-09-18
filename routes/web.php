@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SchedulesController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Events\CalendarEventsController;
+use App\Http\Controllers\Auth\NewRegistrationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -49,10 +49,13 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/dashboard/{classroom}/edit-room', [AdminController::class, 'editRoom'])->name('admin.editRoom');
     Route::put('/admin/dashboard/{classroom}/update-room', [AdminController::class, 'updateRoom'])->name('admin.updateRoom');
     Route::delete('/admin/dashboard/{classroom}/delete-room', [AdminController::class, 'deleteRoom'])->name('admin.deleteRoom');
-
     
     // Routes for the users page
-    Route::get('/admin/dashboard/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/dashboard/users', [AdminController::class, 'accounts'])->name('admin.users');
+    Route::post('/admin/create_user', [NewRegistrationController::class, 'store_user'])->name('auth.store_user');
+    Route::get('/admin/{users}/edit_user', [AdminController::class, 'edit_user'])->name('admin.edit_user');
+    Route::patch('/admin/{user}/update-user', [AdminController::class, 'update_user'])->name('admin.update_user');
+    Route::delete('/admin/{user}/delete-user', [AdminController::class, 'delete_user'])->name('admin.delete_user');
 
 });
 

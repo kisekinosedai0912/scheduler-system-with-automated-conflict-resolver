@@ -7,6 +7,7 @@ use App\Models\Schedules;
 use Illuminate\Http\Request;
 use App\Models\Subjects;
 use App\Models\Teachers;
+use App\Models\User;
 
 class AdminController extends Controller
 {
@@ -208,14 +209,44 @@ class AdminController extends Controller
             return redirect()->route('admin.classroom')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
         }
     }
+
+    // Function to return view to the users page
+    public function accounts() {
+        $users = User::all();
+        return view('admin.users', ['users' => $users]);
+    }
+
+    public function edit_user(User $users) {
+        return view('admin-modals.editUser', ['users' => $users]);
+    }
+
+    public function update_user(Request $request, User $user) {
+        $userData = $request->validate([
+            'name' => 'required|string|max:255',
+            'user_role' => 'required|string|in:faculty,admin'
+        ]);        
     
+        try {
+            $user->update($userData);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }        
+    
+        return redirect()->back()->with('success', 'User updated successfully!');
+    }
 
+    public function delete_user($id) {
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
 
-
-
-
-
-    public function users() {
-        return view('admin.users');
+            return redirect()->route('admin.users')->with('success', 'Record deleted successfully.');
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.users')->with('error', 'Error: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
+        }
     }
 }

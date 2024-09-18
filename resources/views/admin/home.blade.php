@@ -80,15 +80,13 @@
                     <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
                     <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
                     </svg>
-                    <input type="search" id="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300 rounded-sm">
+                    <input type="search" id="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300">
                 </div>
-  
 
                 {{-- For large screens button --}}
-                <button class="buttonDownload rounded-sm hidden md:block" id="print-button">Export to excel</button>
-
+                <button class="buttonDownload rounded-md hidden md:block" id="print-button">Export to excel</button>
                 {{-- For mobile button --}}
-                <button class="buttonDownload rounded-sm block md:hidden" id="print-button">Export</button>
+                <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button>
             </div>
     </div>
     
