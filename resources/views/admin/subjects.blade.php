@@ -16,23 +16,7 @@
             <input type="search" name="searchSubject" id="search-subject" placeholder="search subject" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 focus:outline-none focus:border-[#223a5e] transition duration-300">
         </div>
 
-        <div class="buttons flex items-center justify-end gap-2 w-80">
-            {{-- Print button --}}
-            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-2 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active">
-                <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
-                  viewBox="0 0 24 24"
-                  height="40"
-                  width="40"
-                  class="w-6 h-6"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
-                  <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-                  <path d="M7 11l5 5l5 -5"></path>
-                  <path d="M12 4l0 12"></path>
-                </svg>
-            </button>
-              
-            {{-- Add button with modal trigger --}}
+        <div class="buttons flex items-center justify-end gap-2 w-80">{{-- Add button with modal trigger --}}
             <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                 <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
                     height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
