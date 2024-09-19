@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Subjects;
 use App\Models\Teachers;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -18,7 +19,82 @@ class AdminController extends Controller
 
     // Function for returning view in the schedule page of the admin dashboard
     public function schedules() {
-        return view('admin.schedules');
+        $schedules = Schedules::all();
+        return view('admin.schedules', ['schedules' => $schedules]);
+    }
+
+    // Function for editing schedules
+    public function editSchedule(Schedules $schedules) {
+        return view('admin.schedules', ['schedules' => $schedules]);
+    }
+
+    // Function for updating schedule
+    public function updateSchedule(Request $request, Schedules $schedules){
+        $request->merge([
+            'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
+            'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
+        ]);
+
+        $scheduleData = $request->validate([
+            'teacherName' => 'required|string',
+            'subject' => 'required|string',
+            'studentNum' => 'required|integer',
+            'yearSection' => 'required|string',
+            'room' => 'required|string',
+            'startTime' => 'required|date_format:H:i:s',
+            'endTime' => 'required|date_format:H:i:s',
+        ]);
+        
+        try {
+            $schedules->update($scheduleData);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    
+        return redirect()->back()->with('success', 'Schedule updated successfully!');
+    }
+
+    // Function for creating schedules
+    public function createSchedule(Request $request) {
+        $request->merge([
+            'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
+            'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
+        ]);
+
+        $scheduleData = $request->validate([
+            'teacherName' => 'required|string',
+            'subject' => 'required|string',
+            'studentNum' => 'required|integer',
+            'yearSection' => 'required|string',
+            'room' => 'required|string',
+            'startTime' => 'required|date_format:H:i:s', 
+            'endTime' => 'required|date_format:H:i:s',   
+        ]);
+    
+        try {
+            Schedules::create($scheduleData);
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+        }
+    
+        return redirect()->route('admin.schedules')->with('success', 'Subject added successfully!');
+    }
+
+    // Function for deletion of schedules
+    public function deleteSchedule($id) {
+        try {
+            $scheduleData = Schedules::findOrFail($id);
+            $scheduleData->delete();
+
+            return redirect()->route('admin.schedules')->with('success', 'Record deleted successfully.');
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.schedules')->with('error', 'Error: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            return redirect()->route('admin.schedules')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
+        }
     }
 
     // Function for returning view in the schedule page of the admin dashboard
@@ -216,10 +292,12 @@ class AdminController extends Controller
         return view('admin.users', ['users' => $users]);
     }
 
+    // Function for returning view to edit user modal
     public function edit_user(User $users) {
         return view('admin-modals.editUser', ['users' => $users]);
     }
 
+    // Function for updating user credentials
     public function update_user(Request $request, User $user) {
         $userData = $request->validate([
             'name' => 'required|string|max:255',
@@ -235,6 +313,7 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'User updated successfully!');
     }
 
+    // Function for deleting user in the users database
     public function delete_user($id) {
         try {
             $user = User::findOrFail($id);

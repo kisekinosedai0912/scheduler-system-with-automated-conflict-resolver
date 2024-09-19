@@ -3,6 +3,9 @@
 
     @section('styles')
         <link rel="stylesheet" href="//cdn.datatables.net/2.1.6/css/dataTables.dataTables.min.css">
+        {{-- Sweet alert 2 css link --}}
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/css/bootstrap-timepicker.min.css">
     @endsection
 
     @section('title-pane', 'Manage Schedules')
@@ -26,7 +29,7 @@
             </button>
                 
             {{-- Add button with modal trigger --}}
-            <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+            <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#scheduleModal">
                 <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
                     height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-width="1" d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"></path>
@@ -38,7 +41,7 @@
         
 
         <!-- Modal -->
-        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal fade" id="scheduleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header text-center bg-[#223a5e]">
@@ -46,7 +49,7 @@
                     </div>
                     <div class="modal-body">
                         {{-- Modal form --}}
-                        <form action="" method="post" name="schedulesForm" id="schedules-form" class="inputs grid grid-cols-2 gap-4">
+                        <form action="{{ route('admin.createSchedule') }}" method="post" name="schedulesForm" id="schedules-form" class="inputs grid grid-cols-2 gap-4">
                             @csrf
                             @method('post')
 
@@ -58,20 +61,21 @@
                             <input type="text" name="room" id="room" class="form-control w-full p-2 rounded-xl" placeholder="Room: ">
                             
                             <div class="col-span-2 grid grid-cols-2 gap-4">
-                                <input type="time" name="startTime" id="start-time" class="form-control w-full p-2 rounded-xl">
-                                <input type="time" name="endTime" id="end-time" class="form-control w-full p-2 rounded-xl">
-                            </div>
+                                <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-xl timepicker" placeholder="Start Time (e.g. 02:30 PM)">
+                                <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-xl timepicker" placeholder="End Time (e.g. 03:30 PM)">
+                            </div>                            
 
                              {{-- Buttons --}}
                             <div class="flex justify-end gap-2 col-span-2">
                                 <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg" data-bs-dismiss="modal">Save</button>
+                                <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Save</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+        @include('admin-modals.editSchedule')
     </div>
 
     <table id="schedulesTable" class="bg-white">
@@ -84,27 +88,34 @@
                 <th>Room</th>
                 <th>Start Time</th>
                 <th>End Time</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>John Doe</td>
-                <td>Programming 2</td>
-                <td>40</td>
-                <td>BSIT 3A</td>
-                <td>Room 7</td>
-                <td>8:00 AM</td>
-                <td>10:00 AM</td>
-            </tr>
-            <tr>
-                <td>Tristan Joe</td>
-                <td>Programming 1</td>
-                <td>40</td>
-                <td>BSIT 1B</td>
-                <td>Room 7</td>
-                <td>8:00 AM</td>
-                <td>10:00 AM</td>
-            </tr>
+            @foreach ($schedules as $schedule)
+                <tr>
+                    <td>{{ $schedule->teacherName }}</td>
+                    <td>{{ $schedule->subject }}</td>
+                    <td>{{ $schedule->studentNum }}</td>
+                    <td>{{ $schedule->yearSection }}</td>
+                    <td>{{ $schedule->room }}</td>
+                    <td>{{ $schedule->startTime }}</td>
+                    <td>{{ $schedule->endTime }}</td>
+                    <td class="flex items-center justify-start">
+                        <a href="{{ route('admin.editSchedule', $schedule->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editScheduleModal-{{ $schedule->id }}">
+                            <i class="fas fa-gear"></i>
+                        </a>
+
+                        <form action="{{ route('admin.deleteSchedule', $schedule->id) }}" method="POST" id="delete-form-{{ $schedule->id }}">
+                            @csrf
+                            @method('DELETE')
+                            <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-form-{{ $schedule->id }}')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
 
@@ -112,12 +123,77 @@
         <!-- jQuery cdn link-->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
         <script src="//cdn.datatables.net/2.1.6/js/dataTables.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
         <script>
             $(document).ready(function() {
                 $('#schedulesTable').DataTable();
             });
+
+            $('.timepicker').timepicker({
+                showMeridian: true, 
+                defaultTime: false, 
+                minuteStep: 1 
+            });
         </script>
+        {{-- Sweet alert 2 script --}}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+        
+        @if(session('error'))
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}"
+                });
+            </script>
+        @endif
+
+        @if(session('success'))
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}"
+                });
+            </script>
+        @endif
+
+        {{-- Validation error handling --}}
+        @if($errors->any())
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    html: `
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    `
+                });
+            </script>
+        @endif
     @endsection
+    <script>
+        function confirmDeletion(event, formId) {
+            event.preventDefault(); 
+    
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#223a5e',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 </x-app-layout>
 
 

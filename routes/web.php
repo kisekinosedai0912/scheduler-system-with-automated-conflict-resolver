@@ -8,7 +8,7 @@ use App\Http\Controllers\Events\CalendarEventsController;
 use App\Http\Controllers\Auth\NewRegistrationController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::middleware('auth')->group(function () {
@@ -27,8 +27,14 @@ Route::middleware(['auth', 'userMiddleware'])->group(function () {
 // Routes for admin
 Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::get('/admin/dashboard/home', [AdminController::class, 'adminIndex'])->name('admin.home');
+
+    // Route for schedules page
     Route::get('/admin/dashboard/schedules', [AdminController::class, 'schedules'])->name('admin.schedules');
-    
+    Route::post('/admin/dashboard/schedules/create-schedule', [AdminController::class, 'createSchedule'])->name('admin.createSchedule');
+    Route::get('/admin/dashboard/{schedules}/edit-schedule', [AdminController::class, 'editSchedule'])->name('admin.editSchedule');
+    Route::put('/admin/dashboard/{schedules}/update-schedule', [AdminController::class, 'updateSchedule'])->name('admin.updateSchedule');
+    Route::delete('/admin/dashboard/{schedulest}/delete-schedule', [AdminController::class, 'deleteSchedule'])->name('admin.deleteSchedule');
+
     // Routes for the subject page
     Route::get('/admin/dashboard/subjects', [AdminController::class, 'subjects'])->name('admin.subjects');
     Route::post('/admin/dashboard/subjects/create', [AdminController::class, 'createSubject'])->name('admin.createSubject');

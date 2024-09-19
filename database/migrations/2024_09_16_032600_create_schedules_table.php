@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('teacherName');
             $table->string('subject');
-            $table->string('studentNumber');
+            $table->integer('studentNum');
             $table->string('yearSection');
             $table->string('room');
             $table->time('startTime');

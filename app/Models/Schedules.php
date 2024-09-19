@@ -13,10 +13,11 @@ class Schedules extends Model
     protected $fillable = [
         'teacherName',
         'subject',
-        'studentNumber',
+        'studentNum',
         'yearSection',
         'room',
         'startTime',
         'endTime'
     ];
+    public $timestamps = false; 
 }
