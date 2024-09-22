@@ -15,8 +15,8 @@ class AdminController extends Controller
 {
     // Function for returning view in the home page of the admin dashboard
     public function adminIndex() {
-        $events = array();
-        $calendarEvents = Events::all();
+        $events = array(); // Create an array of events
+        $calendarEvents = Events::all(); // Retrieve all events in the events table model
         $prevEventStartTime = $calendarEvents->isNotEmpty() ? $calendarEvents->first()->startTime : null;
 
         foreach ($calendarEvents as $calendarEvent) {
@@ -32,6 +32,7 @@ class AdminController extends Controller
     }
     // Function for creating events
     public function createEvent(Request $request) {
+        // Trial and error logic before creating an event in the calendar
         try {
             $request->validate([
                 'title' => 'required|string',
@@ -41,71 +42,78 @@ class AdminController extends Controller
                 'endTime' => 'required|date_format:H:i|after:startTime',
             ]);
      
-            $startDateTime = Carbon::parse($request->input('start'));
-            $endDateTime = Carbon::parse($request->input('end'));
+            $startDateTime = Carbon::parse($request->input('start')); // Parse the start date and time before creation
+            $endDateTime = Carbon::parse($request->input('end')); // Parse the end date and time before creation
      
             Events::create([
                 'eventTitle' => $request->input('title'),
-                'startDate' => $startDateTime->toDateString(),
+                'startDate' => $startDateTime->toDateString(), // Convert to string before storing in the database table
                 'endDate' => $endDateTime->toDateString(),
                 'startTime' => $startDateTime->toTimeString(),
                 'endTime' => $endDateTime->toTimeString(),
             ]);
      
-            return response()->json(['success' => 'Event created successfully']);
+            return response()->json(['success' => 'Event created successfully']); // Return a json response and display a success message if successful
         } catch (\Exception $e) {
+            // Return a json response for the exception with an error message
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
     // Function for resizing events in the calendar
     public function resizeEvent(Request $request, $id) {
+        // Requests a validation to the server for resizing an event
         $request->validate([
             'endDate' => 'required|date_format:Y-m-d',
             'endTime' => 'required|date_format:H:i|after:startTime', 
         ]);
     
-        $event = Events::findOrFail($id);
-
+        $event = Events::findOrFail($id); // Find the ID
+        // Parse the time and date
         $newEndDateTime = Carbon::parse($request->input('endDate') . ' ' . $request->input('endTime'))->setTimezone('UTC');
     
         $event->update([
-            'endDate' => $newEndDateTime->toDateString(),
+            'endDate' => $newEndDateTime->toDateString(), // Convert to string
             'endTime' => $newEndDateTime->toTimeString(),
         ]);
     
-        return response()->json(['message' => 'Event resized']);
+        return response()->json(['message' => 'Event resized']); // Return a json response of the resized data
     }
     // Function for dragging and dropping of events
     public function dragEvent(Request $request, $id) {
+        // Find the ID of the event in the calendar
         $calendarEvents = Events::find($id);
+        // CHecks if the event is present, if not, display an error
         if (!$calendarEvents) {
             return response()->json(['error' => 'Unable to locate event'], 404);
         }
+        // Logic to update event dates after a successfull drag change
         try {
             $calendarEvents->update([
                 'startDate' => $request->startDate,
                 'endDate' => $request->endDate,
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage()); // Redirect back with an excption error message
         }
-        return response()->json('Event updated successfully');
+        return response()->json('Event updated successfully'); // Return a json response if successfull
     }
     // Function for deleting events in the calendar
     public function deleteEvent($id) {
+        // Find the id of the event to delete and request a delete in the server
         try {
             $event = Events::findOrFail($id);
             $event->delete();
         } catch (\Exception $e) {
+            // Redirect  back to the page with an exception message
             return redirect()->route('admin.home')->with('error', 'Error occurred while deleting the event: ' . $e->getMessage());
         }
 
-        return response()->json(['message' => 'Event deleted successfully!']);
+        return response()->json(['message' => 'Event deleted successfully!']); // Return a json response after successful deletion with a success emssage
     }
     // Function for returning view in the schedule page of the admin dashboard
     public function schedules() {
-        $schedules = Schedules::all();
-        return view('admin.schedules', ['schedules' => $schedules]);
+        $schedules = Schedules::all(); // Retrieve all of the data in the schedules table model
+        return view('admin.schedules', ['schedules' => $schedules]); // Returns a key $schedules and redirects to the schedules page
     }
     // Function for editing schedules
     public function editSchedule(Schedules $schedules) {
@@ -113,11 +121,12 @@ class AdminController extends Controller
     }
     // Function for updating schedule
     public function updateSchedule(Request $request, Schedules $schedules){
+        // Convert the start and end time into a 12-hour format and requests an update of the data with formatted times before storing in the database table 
         $request->merge([
             'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
             'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
         ]);
-
+        // Validate the update request
         $scheduleData = $request->validate([
             'teacherName' => 'required|string',
             'subject' => 'required|string',
@@ -127,7 +136,7 @@ class AdminController extends Controller
             'startTime' => 'required|date_format:H:i:s',
             'endTime' => 'required|date_format:H:i:s',
         ]);
-        
+        // Logic for handling a success and error cases
         try {
             $schedules->update($scheduleData);
 
@@ -139,11 +148,12 @@ class AdminController extends Controller
     }
     // Function for creating schedules
     public function createSchedule(Request $request) {
+        // The same as  the code above
         $request->merge([
             'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
             'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
         ]);
-
+        // Validate the create request
         $scheduleData = $request->validate([
             'teacherName' => 'required|string',
             'subject' => 'required|string',
@@ -164,6 +174,7 @@ class AdminController extends Controller
     }
     // Function for deletion of schedules
     public function deleteSchedule($id) {
+        // The same thing as for the other deletion functions
         try {
             $scheduleData = Schedules::findOrFail($id);
             $scheduleData->delete();
@@ -179,13 +190,14 @@ class AdminController extends Controller
     }
     // Function for returning view in the schedule page of the admin dashboard
     public function subjects() {
-        $paginateSubjects = Subjects::paginate(7); 
-        $subjects = Subjects::all();
-        return view('admin.subjects', compact('paginateSubjects', 'subjects'));
+        $paginateSubjects = Subjects::paginate(7); // Paginates the table list with a limit of 7 datasets per page
+        $subjects = Subjects::all(); // Retrieve all subjects in the database table subjects
+
+        return view('admin.subjects', compact('paginateSubjects', 'subjects')); // The same as the previous ones
     }
-    
     // Function for creating subjects in the database
     public function createSubject(Request $request) {
+        // The same validation rule before creation of data in the database tables
         $data = $request->validate([
             'subjectName' => 'required|string',
             'description' => 'nullable|string'
@@ -352,53 +364,53 @@ class AdminController extends Controller
     }
     // Function to return view to the users page
     public function accounts(Request $request) {
-        $search = $request->input('search');
-        $query = User::query();
-    
-        if ($search) {
+        $query = User::query(); // Preparing a query builder to search users on the Users model
+        // CHecks for a search parameter to do searching if it exists 
+        if ($request->has('search')) {
+            // Retrieve users based from query result either by name or email search
+            $search = $request->input('search');
             $query->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%");
+                ->orWhere('email', 'LIKE', "%{$search}%");
         }
-    
-        $paginateUsers = $query->paginate(7);
-        
-        if ($request->ajax()) {
-            return view('admin.partials.user_table', compact('paginateUsers'));
-        }
-    
-        return view('admin.users', compact('paginateUsers', 'search'));
+
+        $users = $query->paginate(7); // Paginate the users table while also paginating the search results to lessen run time and load time from the server
+
+        return view('admin.users', compact('users')); // Returns to users page with the users key that has a value of $users 
     }
     // Function for returning view to edit user modal
     public function edit_user(User $users) {
-        return view('admin-modals.editUser', ['users' => $users]);
+        return view('admin-modals.editUser', ['users' => $users]); // Returns similarly to the code above that uses compact method
     }
     // Function for updating user credentials
     public function update_user(Request $request, User $user) {
+        // Validate user request to patch the existing credentials (Exception: passwords, names and email updates are done by the user itself on its account)
         $userData = $request->validate([
             'name' => 'required|string|max:255',
             'user_role' => 'required|string|in:faculty,admin'
         ]);        
-    
+        // Trial and error logic to update data while maintaining view to possible errors and return thos errors to be handled and displayed
         try {
             $user->update($userData);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage()); 
         }        
-    
-        return redirect()->back()->with('success', 'User updated successfully!');
+        
+        return redirect()->back()->with('success', 'User updated successfully!'); 
     }
     // Function for deleting user in the users database
     public function delete_user($id) {
+        // Trial and error logic handling before deletion of existing credentials
         try {
             $user = User::findOrFail($id);
             $user->delete();
-
+            // Redirect back to the page after a successful deletion with a success message confirmation
             return redirect()->route('admin.users')->with('success', 'Record deleted successfully.');
             
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Redirect back if in case of model not accessible or exists in the database
             return redirect()->route('admin.users')->with('error', 'Error: ' . $e->getMessage());
-            
         } catch (\Exception $e) {
+            // Redirect back if an error occurs and display the error
             return redirect()->route('admin.users')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
         }
     }
