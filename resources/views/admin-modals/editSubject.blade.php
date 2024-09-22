@@ -1,5 +1,5 @@
 <!-- Subject edit modal -->
-@foreach ($subjects as $subject)
+@foreach ($paginateSubjects as $subject)
     <div class="modal fade" id="editModal-{{ $subject->id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editModalLabel-{{ $subject->id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

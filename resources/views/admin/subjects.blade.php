@@ -8,12 +8,12 @@
     @section('title-pane', 'Manage Subjects')
 
     <div class="outer-container flex flex-row items-center justify-between px-2 rounded-md bg-white">
-        <div class="flex items-center relative md:w-3/12 my-2">
+        <form class="flex items-center relative md:w-3/12 my-2" id="subjects-search-form">
             <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
             <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
             </svg>
-            <input type="search" name="searchSubject" id="search-subject" placeholder="search subject" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 focus:outline-none focus:border-[#223a5e] transition duration-300">
-        </div>
+            <input type="search" name="searchSubject" id="search-subject" placeholder="search subject" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 focus:outline-none focus:border-[#223a5e] transition duration-300" value="{{ request('searchSubject') }}">
+        </form>
 
         <div class="buttons flex items-center justify-end gap-2 w-80">{{-- Add button with modal trigger --}}
             <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
@@ -147,9 +147,41 @@
     </span>
 
     @section('scripts')
-        {{-- Sweet alert 2 script --}}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#search-subject').on('keypress', function (e) {
+                if (e.which === 13) { 
+                        e.preventDefault();
+                        $('#subjects-search-form').submit(); 
+                    }
+                });
+    
+                $('#search-subject').on('input', function () {
+                    if ($(this).val().trim() === "") {
+                        $('#subjects-search-form').submit();
+                    }
+                });
+            });
+            function confirmDeletion(event, formId) {
+                event.preventDefault(); 
         
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#223a5e',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            }
+        </script>
         @if(session('error'))
             <script>
                 Swal.fire({
@@ -159,7 +191,6 @@
                 });
             </script>
         @endif
-
         @if(session('success'))
             <script>
                 Swal.fire({
@@ -174,7 +205,6 @@
                 });
             </script>
         @endif
-
         {{-- Validation error handling --}}
         @if($errors->any())
             <script>
@@ -192,24 +222,4 @@
             </script>
         @endif
     @endsection
-
-    <script>
-        function confirmDeletion(event, formId) {
-            event.preventDefault(); 
-    
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#223a5e',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById(formId).submit();
-                }
-            });
-        }
-    </script>
 </x-app-layout>

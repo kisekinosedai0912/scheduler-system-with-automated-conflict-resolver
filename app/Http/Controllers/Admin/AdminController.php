@@ -189,11 +189,17 @@ class AdminController extends Controller
         }
     }
     // Function for returning view in the schedule page of the admin dashboard
-    public function subjects() {
-        $paginateSubjects = Subjects::paginate(7); // Paginates the table list with a limit of 7 datasets per page
-        $subjects = Subjects::all(); // Retrieve all subjects in the database table subjects
+    public function subjects(Request $request) { 
+        $query = Subjects::query(); 
+        
+        if ($request->has('searchSubject')) {
+            $search = $request->input('searchSubject');
+            $query->where('subjectName', 'LIKE', "%{$search}%");
+        }
 
-        return view('admin.subjects', compact('paginateSubjects', 'subjects')); // The same as the previous ones
+        $paginateSubjects = $query->paginate(7);
+
+        return view('admin.subjects', compact('paginateSubjects')); // The same as the previous ones
     }
     // Function for creating subjects in the database
     public function createSubject(Request $request) {
@@ -247,9 +253,19 @@ class AdminController extends Controller
         return redirect()->route('admin.subjects')->with('success', 'Subject deleted successfully.');
     }
     // Function for returning view in the teacher loads page of the admin dashboard
-    public function teacher() {
-        $paginateLoads = Teachers::with('subject')->paginate(7); 
+    public function teacher(Request $request) { 
         $subjects = Subjects::all(); 
+        $query = Teachers::with('subject');
+
+        if ($request->has('searchTeacher')) {
+            $search = $request->input('searchTeacher');
+            $query->where('teacherName', 'LIKE', "%{$search}%") 
+                  ->orWhereHas('subject', function($q) use ($search) {
+                      $q->where('subjectName', 'LIKE', "%{$search}%"); 
+                  });
+        }
+    
+        $paginateLoads = $query->paginate(7); 
     
         return view('admin.teacher', compact('paginateLoads', 'subjects')); 
     }
@@ -305,11 +321,18 @@ class AdminController extends Controller
         }
     }
     // Function for returning view in the classroom page
-    public function classroom() {
-        $rooms = Classroom::all();
-        $paginateRooms = Classroom::paginate(7);
+    public function classroom(Request $request) {
+        $query = Classroom::query();
 
-        return view('admin.classroom', compact(['rooms', 'paginateRooms']));
+        if ($request->has('searchRoom')) {
+            $search = $request->input('searchRoom');
+            $query->where('classroomNumber', 'LIKE', "%{$search}%")
+                ->orWhere('buildingNumber', 'LIKE', "%{$search}%");
+        }
+
+        $paginateRooms = $query->paginate(7);
+
+        return view('admin.classroom', compact('paginateRooms'));
     }
     // Function for creating rooms in the database 
     public function createRoom(Request $request) {

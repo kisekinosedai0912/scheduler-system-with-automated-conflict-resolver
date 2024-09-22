@@ -192,6 +192,42 @@
     @section('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Event listener for searching
+                $('#search').on('keypress', function (e) {
+                if (e.which === 13) { 
+                        e.preventDefault();
+                        $('#search-form').submit(); 
+                    }
+                });
+                // Revert the table back after the search input is empty
+                $('#search').on('input', function () {
+                    // Checks if the search input is empty then automatically submit an empty search to revert the table list back
+                    if ($(this).val().trim() === "") {
+                        $('#search-form').submit();
+                    }
+                });
+            });
+            // Delete confirmation function with sweet alert library pop up
+            function confirmDeletion(event, formId) {
+                    event.preventDefault(); 
+            
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#223a5e',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById(formId).submit();
+                        }
+                    });
+                }
+        </script>
         @if(session('error'))
             <script>
                 Swal.fire({
@@ -231,41 +267,5 @@
                 });
             </script>
         @endif
-        <script>
-            $(document).ready(function () {
-                // Event listener for searching
-                $('#search').on('keypress', function (e) {
-                if (e.which === 13) { 
-                        e.preventDefault();
-                        $('#search-form').submit(); 
-                    }
-                });
-                // Revert the table back after the search input is empty
-                $('#search').on('input', function () {
-                    // Check if the search input is empty then automatically submit an empty search to revert the table list back
-                    if ($(this).val().trim() === "") {
-                        $('#search-form').submit();
-                    }
-                });
-            });
-            // Delete confirmation function with sweet alert library pop up
-            function confirmDeletion(event, formId) {
-                    event.preventDefault(); 
-            
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#223a5e',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            document.getElementById(formId).submit();
-                        }
-                    });
-                }
-        </script>
     @endsection
 </x-app-layout>
