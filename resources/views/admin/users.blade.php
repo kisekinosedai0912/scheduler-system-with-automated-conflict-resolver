@@ -6,9 +6,8 @@
     @endsection
     @section('title-pane', 'User Management')
 
-    <div class="outer-container flex flex-col md:flex-row items-center justify-between bg-white rounded-sm px-2">
+    <div class="outer-container flex items-center justify-evenly md:justify-between bg-white rounded-sm md:px-2">
         {{-- Search input box--}}
-        
         <form class="flex items-center relative md:w-3/12 my-2" id="search-form">
             <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
             <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
@@ -100,7 +99,7 @@
             </div>
         </div>
     </div>
-    
+
     <hr class="my-2">
     {{-- Table --}}
     <span class="hidden md:block">
@@ -164,8 +163,20 @@
                                     <i class="fas fa-ellipsis-h"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="">Edit</a></li>
-                                    <li><a class="dropdown-item" href="">Delete</a></li>
+                                    <li>
+                                        <a href="#" class="text-md ml-4" data-bs-toggle="modal" data-bs-target="#edit-user-{{ $user->id }}">
+                                            Edit
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form action="{{ route('admin.delete_user', $user->id) }}" method="post" id="delete-form-{{ $user->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <a href="#" class="text-md ml-4" onclick="confirmDeletion(event, 'delete-form-{{ $user->id }}')">
+                                                Delete
+                                            </a>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         </td>
