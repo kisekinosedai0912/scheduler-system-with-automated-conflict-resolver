@@ -1,4 +1,4 @@
-@foreach ($teachers as $teacher)
+@foreach ($paginateLoads as $teacher)
     <div class="modal fade" id="editTeacher-{{ $teacher->id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editModalLabel-{{ $teacher->id }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

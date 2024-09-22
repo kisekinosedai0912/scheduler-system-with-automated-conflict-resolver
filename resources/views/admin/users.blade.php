@@ -8,12 +8,14 @@
 
     <div class="outer-container flex flex-col md:flex-row items-center justify-between bg-white rounded-sm px-2">
         {{-- Search input box--}}
-        <div class="flex items-center relative md:w-3/12 my-2">
+        
+        <form class="flex items-center relative md:w-3/12 my-2" action="{{ route('admin.users') }}" method="GET" id="search-form">
             <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
             <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
             </svg>
-            <input type="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1. rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300">
-        </div>
+            <input type="search" id="search" name="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1. rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300" value="{{ request('search') }}">
+        </form>
+        
 
         <div class="buttons flex items-center justify-evenly w-80">
             <div class="buttons flex items-center justify-end gap-2 w-80">
@@ -46,7 +48,7 @@
                             <!-- Name -->
                             <div>
                                 <x-input-label for="name" :value="__('Name')" />
-                                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+                                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autocomplete="name" />
                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
                     
@@ -115,7 +117,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($users as $user)
+                @foreach ($paginateUsers as $user)
                     @include('admin-modals.editUser', ['user' => $user])
                     <tr>
                         <td>{{ $user->name }}</td>
@@ -123,7 +125,7 @@
                         <td>{{ $user->user_role }}</td>
                         <td class="flex items-start justify-start">
                             <a href="#" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#edit-user-{{ $user->id }}">
-                                <i class="fas fa-gear"></i>
+                                <i class="fas fa-edit"></i>
                             </a>
                             <form action="{{ route('admin.delete_user', $user->id) }}" method="post" id="delete-form-{{ $user->id }}">
                                 @csrf
@@ -137,6 +139,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="mt-4">
+            {{ $paginateUsers->appends(['search' => request('search')])->links() }}
+        </div>        
     </span>
 
     {{-- Table for mobile--}}
@@ -144,31 +149,36 @@
         <table class="table shadow-sm">
             <thead>
                 <tr>
-                <th scope="col">Teacher's Name</th>
-                <th scope="col">Subject Name</th>
-                <th scope="col"># of Hours</th>
-                <th scope="col"></th>
+                    <th scope="col">User</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="font-normal">Eric Coles</td>
-                    <td class="font-normal">Event Driven Programming</td>
-                    <td class="font-normal">2 Hours</td>
-                    <td>
-                        <div class="dropdown">
-                            <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="">Edit</a></li>
-                                <li><a class="dropdown-item" href="">Delete</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+                @foreach ($paginateUsers as $user)
+                    <tr>
+                        <td class="font-normal">{{ $user->name }}</td>
+                        <td class="font-normal">{{ $user->email }}</td>
+                        <td class="font-normal">{{ $user->user_role }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="">Edit</a></li>
+                                    <li><a class="dropdown-item" href="">Delete</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            @endforeach
         </table>
+        <div class="mt-2">
+            {{ $paginateUsers->links() }}
+        </div>
     </span>
 
     @section('scripts')
@@ -187,9 +197,14 @@
         @if(session('success'))
             <script>
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Success',
-                    text: "{{ session('success') }}"
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
                 });
             </script>
         @endif
@@ -212,6 +227,31 @@
         @endif
 
         <script>
+            const searchInput = document.getElementById('search-form');
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const createUserModal = document.getElementById('create-user-modal');
+                
+                createUserModal.addEventListener('shown.bs.modal', function () {
+                    const nameInput = document.getElementById('name');
+                    nameInput.focus(); 
+                });
+            });
+
+            searchInput.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const searchUser = document.getElementById('search'); 
+
+                fetchUsers(searchUser.value);
+            });
+
+            function fetchUsers(search) {
+                fetch(`{{ route('admin.users') }}?search=${search}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        document.querySelector('tbody').innerHTML = data;
+                    });
+            }
             function confirmDeletion(event, formId) {
                 event.preventDefault(); 
         

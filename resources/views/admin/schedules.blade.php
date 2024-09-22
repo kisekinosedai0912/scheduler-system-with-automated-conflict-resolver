@@ -103,7 +103,7 @@
                     <td>{{ $schedule->endTime }}</td>
                     <td class="flex items-center justify-start">
                         <a href="{{ route('admin.editSchedule', $schedule->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editScheduleModal-{{ $schedule->id }}">
-                            <i class="fas fa-gear"></i>
+                            <i class="fas fa-edit"></i>
                         </a>
 
                         <form action="{{ route('admin.deleteSchedule', $schedule->id) }}" method="POST" id="delete-form-{{ $schedule->id }}">
@@ -151,9 +151,14 @@
         @if(session('success'))
             <script>
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Success',
-                    text: "{{ session('success') }}"
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
                 });
             </script>
         @endif

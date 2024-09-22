@@ -79,14 +79,14 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rooms as $room)
+                @foreach ($paginateRooms as $room)
                     <tr>
                         <td>{{ $room->classroomNumber }}</td>
                         <td>{{ $room->buildingNumber }}</td>
                         <td>{{ $room->floorNumber }}</td>
                         <td class="flex items-center justify-start">
                             <a href="{{ route('admin.editRoom', $room->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#classroomEdit-{{ $room->id }}">
-                                <i class="fas fa-gear"></i>
+                                <i class="fas fa-edit"></i>
                             </a>
                             <form action="{{ route('admin.deleteRoom', $room->id) }}" method="post" id="delete-room-{{ $room->id }}">
                                 @csrf
@@ -100,6 +100,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="mt-4">
+            {{ $paginateRooms->links() }}
+        </div>
     </span>
 
     {{-- Table for mobile --}}
@@ -114,7 +117,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rooms as $room)
+                @foreach ($paginateRooms as $room)
                     <tr>
                         <td>{{ $room->classroomNumber }}</td>
                         <td>{{ $room->buildingNumber }}</td>
@@ -146,6 +149,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="mt-2">
+            {{ $paginateRooms->links() }}
+        </div>
     </span>
 
 
@@ -166,9 +172,14 @@
         @if(session('success'))
             <script>
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Success',
-                    text: "{{ session('success') }}"
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
                 });
             </script>
         @endif

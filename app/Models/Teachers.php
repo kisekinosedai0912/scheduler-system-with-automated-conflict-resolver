@@ -15,4 +15,9 @@ class Teachers extends Model
         'numberHours'
     ];
     public $timestamps = false; 
+
+    public function subject()
+    {
+        return $this->belongsTo(Subjects::class, 'subjectName', 'subjectName');
+    }
 }

@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('eventTitle');
             $table->date('startDate');
             $table->date('endDate');
+            $table->time('startTime');
+            $table->time('endTime');
         });
     }
 

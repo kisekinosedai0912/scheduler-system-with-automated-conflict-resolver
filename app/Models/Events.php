@@ -13,6 +13,9 @@ class Events extends Model
     protected $fillable = [
         'eventTitle',
         'startDate',
-        'endDate'
+        'endDate',
+        'startTime',
+        'endTime',
     ];
+    public $timestamps = false; 
 }

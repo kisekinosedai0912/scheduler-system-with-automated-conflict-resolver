@@ -2,7 +2,6 @@
     @section('title', 'Scheduler System with Automated Nursery System')
 
     @section('styles')
-        {{-- Sweet alert 2 css link --}}
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
     @endsection
 
@@ -75,15 +74,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($subjects as $subject)
+                @foreach ($paginateSubjects as $subject)
                     <tr>
                         <td>{{ $subject->subjectName }}</td>
                         <td>{{ $subject->description }}</td>
                         <td class="flex items-center justify-start">
                             <a href="{{ route('admin.editSubject', $subject->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editModal-{{ $subject->id }}">
-                                <i class="fas fa-gear"></i>
+                                <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('admin.deleteRoom', $subject->id) }}" method="POST" id="delete-form-{{ $subject->id }}">
+                            <form action="{{ route('admin.deleteSubject', $subject->id) }}" method="POST" id="delete-form-{{ $subject->id }}">
                                 @csrf
                                 @method('DELETE')
                                 <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-form-{{ $subject->id }}')">
@@ -95,6 +94,10 @@
                 @endforeach
             </tbody>
         </table>
+         <!-- Pagination Links -->
+        <div class="mt-4">
+            {{ $paginateSubjects->links() }}
+        </div>
     </span>
 
     {{-- Subject table for mobile --}}
@@ -108,11 +111,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($subjects as $subject)
+                @foreach ($paginateSubjects as $subject)
                     <tr>
                         <td>{{ $subject->subjectName }}</td>
                         <td>{{ $subject->description }}</td>
-                        <td class="flex items-center justify-start">
+                        <td>
                             <div class="dropdown">
                                 <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-ellipsis-h"></i>
@@ -137,6 +140,10 @@
                 @endforeach
             </tbody>
         </table>
+        <!-- Pagination Links -->
+        <div class="mt-2">
+            {{ $paginateSubjects->links() }}
+        </div>
     </span>
 
     @section('scripts')
@@ -156,9 +163,14 @@
         @if(session('success'))
             <script>
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Success',
-                    text: "{{ session('success') }}"
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
                 });
             </script>
         @endif

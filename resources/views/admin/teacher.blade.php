@@ -86,14 +86,14 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($teachers as $teacher)
+                @foreach ($paginateLoads as $teacher)
                     <tr>
                         <td>{{ $teacher->teacherName }}</td>
-                        <td>{{ $teacher->subjectName }}</td> 
+                        <td>{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td> 
                         <td>{{ $teacher->numberHours }}</td>
                         <td class="flex items-center justify-start">
                             <a href="{{ route('admin.editLoad', $teacher->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editTeacher-{{ $teacher->id }}">
-                                <i class="fas fa-gear"></i>
+                                <i class="fas fa-edit"></i>
                             </a>
                             <form action="{{ route('admin.deleteLoad', $teacher->id) }}" method="POST" id="delete-form-{{ $teacher->id }}">
                                 @csrf
@@ -107,6 +107,9 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="mt-4">
+            {{ $paginateLoads->links() }}
+        </div>
     </span>
 
     {{-- Table for mobile--}}
@@ -121,24 +124,39 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="font-light">Eric Coles</td>
-                    <td class="font-light">Event Driven Programming</td>
-                    <td class="font-light">2 Hours</td>
-                    <td>
-                        <div class="dropdown">
-                            <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="">Edit</a></li>
-                                <li><a class="dropdown-item" href="">Delete</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
+                @foreach ($paginateLoads as $teacher)
+                    <tr>
+                        <td class="font-light">{{ $teacher->teacherName }}</td>
+                        <td class="font-light">{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td>
+                        <td class="font-light">{{ $teacher->numberHours }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item text-md" href="{{ route('admin.editLoad', $teacher->id) }}" data-bs-toggle="modal" data-bs-target="#editTeacher-{{ $teacher->id }}">Edit</a>
+                                    </li>
+                                    <li>
+                                        <form action="{{ route('admin.deleteLoad', $teacher->id) }}" method="POST" id="delete-form-{{ $teacher->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <a href="#" class="dropdown-item text-md" onclick="confirmDeletion(event, 'delete-form-{{ $teacher->id }}')">
+                                                Delete
+                                            </a>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
+        <div class="mt-2">
+            {{ $paginateLoads->links() }}
+        </div>
     </span>
 
     @section('scripts')
@@ -157,9 +175,14 @@
         @if(session('success'))
             <script>
                 Swal.fire({
+                    toast: true,
+                    position: 'top-end',
                     icon: 'success',
-                    title: 'Success',
-                    text: "{{ session('success') }}"
+                    title: 'Success!',
+                    text: "{{ session('success') }}",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
                 });
             </script>
         @endif
