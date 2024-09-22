@@ -111,6 +111,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script>
            $(document).ready(function() {
                 // Stack sorting preparation
@@ -335,56 +336,34 @@
                         });
                     },
                 });
-                // // Fetching searched events on the search bar
-                // $('#search').on('keypress', function (e) {
-                //     if (e.which === 13) { 
-                //         const searchEvent = $(this).val().toLowerCase();
-                //         displaySearchedEvents(searchEvent);
-                //     }
-                // });
-
-                // // Function for search
-                // const displaySearchedEvents = searchEvent => {
-                //     const searchedEvent = encodeURIComponent(searchEvent);
-
-                //     $.ajax({
-                //         method: 'GET',
-                //         url: `/calendar/search?eventTitle=${searchedEvent}`,
-                //         success(response) {
-                //             if (calendar) {
-                //                 calendar.removeAllEvents();
-                //                 calendar.addEventSource(response);
-                //             } else {
-                //                 console.error('Calendar event not defined.');
-                //             }
-                //         },
-                //         error(jqXHR, status, error) {
-                //             console.error('Error searching events: ', status, error);
-                //         }
-                //     });
-                // }
-
-                // printBtn.addEventListener('click', () => {
-                //     const events = calendar.getEvents();
+                // Fetching searched events on the search input
+                $('#search-event').on('input', function() {
+                    let searchTerm = $(this).val().toLowerCase();
+                    let filteredEvents = events.filter(event => event.title.toLowerCase().includes(searchTerm));
                     
-                //     if (events.length === 0) {
-                //         alert('No events to export.');
-                //         return;
-                //     }
+                    $('#calendar').fullCalendar('removeEventSources');
+                    $('#calendar').fullCalendar('addEventSource', filteredEvents);
+                });
+                // Function to export calendar data in excel file
+                $('#print-button').on('click', function() {
+                    if (events.length === 0) {
+                        alert('No events to export.');
+                        return;
+                    }
 
-                //     const formattedEvents = events.map(event => ({
-                //         title: event.title,
-                //         start: event.start ? event.start.toISOString().slice(0, 10) : '',
-                //         end: event.end ? event.end.toISOString().slice(0, 10) : 'N/A',
-                //         color: event.backgroundColor,
-                //     }));
+                    let eventList = events.map(event => ({
+                        Title: event.title,
+                        StartDate: moment(event.start).format('YYYY-MM-DD'),
+                        EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
+                        StartTime: moment(event.start).format('HH:mm'),
+                        EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
+                    }));
 
-                //     const wb = XLSX.utils.book_new();
-                //     const ws = XLSX.utils.json_to_sheet(formattedEvents);
-                //     XLSX.utils.book_append_sheet(wb, ws, 'Events');
-
-                //     XLSX.writeFile(wb, 'events.xlsx');
-                // });
+                    let ws = XLSX.utils.json_to_sheet(eventList);
+                    let wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
+                    XLSX.writeFile(wb, "Calendar_Events.xlsx");
+                });
             });
         </script>
     @endsection

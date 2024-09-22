@@ -64,6 +64,6 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::delete('/admin/{user}/delete-user', [AdminController::class, 'delete_user'])->name('admin.delete_user');
 });
 // Routes for calendar of events
-// Route::put('/calendar/search', [CalendarEventsController::class, 'searchEvent']);
+
 
 
