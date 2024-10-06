@@ -28,7 +28,6 @@
                 </button>
             </div>    
         </div>
-
         <!-- Modal -->
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -48,21 +47,30 @@
                             </div>
 
                             <div class="mb-3">
-                                <select name="subjectName" id="subject-name" class="form-control col-span-2 w-full p-2 rounded-md">
-                                    <option value="">Subjects</option>
-                                    @foreach($subjects as $subject)
-                                        <option value="{{ $subject->subjectName }}">{{ $subject->subjectName }}</option>
+                                <select id="category-select" name="categoryName" class="form-control">
+                                    <option value="">Select Category</option>
+                                    @foreach($subjects->unique('category') as $subject)
+                                        <option value="{{ $subject->category }}">{{ $subject->category }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div class="mb-3">
-                                <input type="text" name="numberHours" id="number-hours" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="No. of Hours: ">
+                                <select name="subject_id" id="subject_id" class="form-control">
+                                    <option value="">Subjects</option>
+                                    @foreach($subjects as $subject)
+                                        <option value="{{ $subject->id }}">{{ $subject->subjectName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <input type="text" name="numberHours" id="number-hours" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="Total Load Hours: ">
                             </div>
 
                             {{-- Modal buttons --}}
                             <div class="modal-button flex items-center justify-end gap-2 mt-3">
-                                <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal" id="dismiss">Cancel</button>
                                 <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Add Load</button>
                             </div>
                         </form>
@@ -81,17 +89,17 @@
                 <tr>
                     <th scope="col">Teacher's Name</th>
                     <th scope="col">Subject Name</th>
-                    <th scope="col">No. of Hours</th>
-                    <th scope="col">Action</th>
+                    <th scope="col" class="text-center">Total Hour Loads</th>
+                    <th scope="col" class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($paginateLoads as $teacher)
                     <tr>
-                        <td>{{ $teacher->teacherName }}</td>
-                        <td>{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td> 
-                        <td>{{ $teacher->numberHours }}</td>
-                        <td class="flex items-center justify-start">
+                        <td class="text-md font-light">{{ $teacher->teacherName }}</td>
+                        <td class="text-md font-light">{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td> 
+                        <td class="text-md font-light text-center">{{ $teacher->numberHours }}</td>
+                        <td class="flex items-center justify-center">
                             <a href="{{ route('admin.editLoad', $teacher->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editTeacher-{{ $teacher->id }}">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -111,7 +119,6 @@
             {{ $paginateLoads->links() }}
         </div>
     </span>
-
     {{-- Table for mobile--}}
     <span class="block md:hidden">
         <table class="table shadow-sm">
@@ -126,9 +133,9 @@
             <tbody>
                 @foreach ($paginateLoads as $teacher)
                     <tr>
-                        <td class="font-light">{{ $teacher->teacherName }}</td>
-                        <td class="font-light">{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td>
-                        <td class="font-light">{{ $teacher->numberHours }}</td>
+                        <td class="text-md font-light">{{ $teacher->teacherName }}</td>
+                        <td class="text-md font-light">{{ $teacher->subject ? $teacher->subject->subjectName : 'No subject assigned' }}</td>
+                        <td class="text-md font-light">{{ $teacher->numberHours }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -163,6 +170,29 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
         <script>
+            const subjectSelect = document.getElementById('subject_id');
+            const categorySelection = document.getElementById('category-select');
+            // Event listener for dynamic fetching of subjects based on the category selected
+            categorySelection.addEventListener('change', function() {
+                const categoryId = encodeURIComponent(this.value);
+
+                subjectSelect.innerHTML = '<option value="">Fetching subjects..</option>';
+
+                if (categoryId) {
+                    fetch(`${window.location.origin}/api/subjects/by_category/${categoryId}`) // fetch the api endpoint and make use of the current server host
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(subject => {
+                                const option = document.createElement('option');
+                                option.value = subject.id; 
+                                option.textContent = subject.subjectName; 
+                                subjectSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error fetching subjects:', error));
+                }
+            });
+
             $('#search-teacher').on('keypress', function (e) {
                 if (e.which === 13) { 
                     e.preventDefault();
@@ -176,9 +206,8 @@
                 }
             });
 
-            const typeSubject = document.getElementById('subject-name');
             // Event listener for typing subject optionally instead of choosing from the dropdown
-            typeSubject.addEventListener('input', function(e) {
+            subjectSelect.addEventListener('input', function(e) {
                 const filter = e.target.value.toLowerCase();
                 const options = e.target.querySelectorAll('option');
 

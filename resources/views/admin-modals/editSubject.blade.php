@@ -15,6 +15,14 @@
                             @method('put')
 
                             <div class="mb-3">
+                                <select name="category" id="category" class="form-control col-span-2 w-full p-2 rounded-md">
+                                    <option disabled selected value="">Subject Category</option>
+                                    <option value="Grade-11 Subjects">Grade-11 Subjects</option>
+                                    <option value="Grade-12 Subjects">Grade-12 Subjects</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
                                 <input type="text" class="form-control" name="subjectName" id="subject-name-{{ $subject->id }}" value="{{ $subject->subjectName }}" required>
                             </div>
                             <div class="mb-3">

@@ -11,13 +11,13 @@ class Teachers extends Model
     protected $table = 'teachers';
     protected $fillable = [
         'teacherName',
-        'subjectName',
+        'categoryName',
+        'subject_id',
         'numberHours'
     ];
     public $timestamps = false; 
 
-    public function subject()
-    {
-        return $this->belongsTo(Subjects::class, 'subjectName', 'subjectName');
+    public function subject(){
+        return $this->belongsTo(Subjects::class, 'subject_id', 'id');
     }
 }

@@ -48,7 +48,7 @@
                                 <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autocomplete="name" />
                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
-                    
+    
                             <!-- Email Address -->
                             <div class="mt-4">
                                 <x-input-label for="email" :value="__('Email')" />
@@ -116,9 +116,9 @@
                 @foreach ($users as $user)
                     @include('admin-modals.editUser', ['user' => $user])
                     <tr>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
-                        <td>{{ $user->user_role }}</td>
+                        <td class="text-md font-light">{{ $user->name }}</td>
+                        <td class="text-md font-light">{{ $user->email }}</td>
+                        <td class="text-md font-light">{{ $user->user_role }}</td>
                         <td class="flex items-start justify-start">
                             <a href="#" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#edit-user-{{ $user->id }}">
                                 <i class="fas fa-edit"></i>
@@ -154,9 +154,9 @@
                 @foreach ($users as $user)
                     @include('admin-modals.editUser', ['user' => $user])
                     <tr>
-                        <td class="font-normal">{{ $user->name }}</td>
-                        <td class="font-normal">{{ $user->email }}</td>
-                        <td class="font-normal">{{ $user->user_role }}</td>
+                        <td class="text-md font-light">{{ $user->name }}</td>
+                        <td class="text-md font-light">{{ $user->email }}</td>
+                        <td class="text-md font-light">{{ $user->user_role }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -251,7 +251,6 @@
                 });
             </script>
         @endif
-        {{-- Validation error handling --}}
         @if($errors->any())
             <script>
                 Swal.fire({

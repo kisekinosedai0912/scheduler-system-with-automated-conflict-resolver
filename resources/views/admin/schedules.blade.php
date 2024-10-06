@@ -1,15 +1,12 @@
 <x-app-layout>
     @section('title', 'Scheduler System with Automated Nursery System')
-
     @section('styles')
         <link rel="stylesheet" href="//cdn.datatables.net/2.1.6/css/dataTables.dataTables.min.css">
         {{-- Sweet alert 2 css link --}}
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/css/bootstrap-timepicker.min.css">
     @endsection
-
     @section('title-pane', 'Manage Schedules')
-
 
     <div class="outer-container flex flex-col md:flex-row items-center justify-end">
         <div class="buttons flex items-center justify-end gap-2 w-80">
@@ -38,8 +35,6 @@
                 </svg>
             </button>
         </div>       
-        
-
         <!-- Modal -->
         <div class="modal fade" id="scheduleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -77,7 +72,7 @@
         </div>
         @include('admin-modals.editSchedule')
     </div>
-
+    {{-- Table for desktop and larger screens --}}
     <table id="schedulesTable" class="bg-white">
         <thead>
             <tr>
@@ -94,13 +89,13 @@
         <tbody>
             @foreach ($schedules as $schedule)
                 <tr>
-                    <td>{{ $schedule->teacherName }}</td>
-                    <td>{{ $schedule->subject }}</td>
-                    <td>{{ $schedule->studentNum }}</td>
-                    <td>{{ $schedule->yearSection }}</td>
-                    <td>{{ $schedule->room }}</td>
-                    <td>{{ $schedule->startTime }}</td>
-                    <td>{{ $schedule->endTime }}</td>
+                    <td class="text-md font-light">{{ $schedule->teacherName }}</td>
+                    <td class="text-md font-light">{{ $schedule->subject }}</td>
+                    <td class="text-md font-light">{{ $schedule->studentNum }}</td>
+                    <td class="text-md font-light">{{ $schedule->yearSection }}</td>
+                    <td class="text-md font-light">{{ $schedule->room }}</td>
+                    <td class="text-md font-light">{{ $schedule->startTime }}</td>
+                    <td class="text-md font-light">{{ $schedule->endTime }}</td>
                     <td class="flex items-center justify-start">
                         <a href="{{ route('admin.editSchedule', $schedule->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editScheduleModal-{{ $schedule->id }}">
                             <i class="fas fa-edit"></i>
@@ -125,6 +120,25 @@
         <script src="//cdn.datatables.net/2.1.6/js/dataTables.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
         <script>
+            function confirmDeletion(event, formId) {
+                event.preventDefault(); 
+        
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#223a5e',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(formId).submit();
+                    }
+                });
+            }
+        </script>
+        <script>
             $(document).ready(function() {
                 $('#schedulesTable').DataTable();
             });
@@ -137,7 +151,6 @@
         </script>
         {{-- Sweet alert 2 script --}}
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
-        
         @if(session('error'))
             <script>
                 Swal.fire({
@@ -147,7 +160,6 @@
                 });
             </script>
         @endif
-
         @if(session('success'))
             <script>
                 Swal.fire({
@@ -162,8 +174,6 @@
                 });
             </script>
         @endif
-
-        {{-- Validation error handling --}}
         @if($errors->any())
             <script>
                 Swal.fire({
@@ -180,25 +190,6 @@
             </script>
         @endif
     @endsection
-    <script>
-        function confirmDeletion(event, formId) {
-            event.preventDefault(); 
-    
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#223a5e',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById(formId).submit();
-                }
-            });
-        }
-    </script>
 </x-app-layout>
 
 

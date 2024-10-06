@@ -12,12 +12,26 @@
                         @csrf
                         @method('put')
 
+                        {{-- Display Current Teacher Name --}}
                         <div class="mb-3">
                             <input type="text" name="teacherName" id="teacher-name-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->teacherName }}" required>
                         </div>
 
+                        {{-- Display Currentt Category --}}
                         <div class="mb-3">
-                            <select name="subjectName" id="subject-name" class="form-control col-span-2 w-full p-2 rounded-md" required>
+                            <select id="category-select-{{ $teacher->id }}" name="categoryName" class="form-control">
+                                <option value="">Select Category</option>
+                                @foreach($subjects->unique('category') as $subject)
+                                    <option value="{{ $subject->category }}" {{ $subject->category == $teacher->category ? 'selected' : '' }}>
+                                        {{ $subject->category }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Pre-select Subject --}}
+                        <div class="mb-3">
+                            <select name="subjectName" id="subject-name-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" required>
                                 <option value="">Subjects</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject->subjectName }}" {{ $subject->subjectName == $teacher->subjectName ? 'selected' : '' }}>
@@ -27,6 +41,7 @@
                             </select>
                         </div>
 
+                        {{-- Display Current Number of Hours --}}
                         <div class="mb-3">
                             <input type="text" name="numberHours" id="number-hours-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->numberHours }}" required>
                         </div>
@@ -42,3 +57,46 @@
         </div>
     </div>
 @endforeach
+
+<script>
+   document.addEventListener('DOMContentLoaded', function () {
+        const editTeacherModals = document.querySelectorAll('.modal');
+
+        editTeacherModals.forEach((modal) => {
+            const modalId = modal.id.split('-')[1];
+            const categorySelect = modal.querySelector(`#category-select-${modalId}`);
+            const subjectSelect = modal.querySelector(`#subject-name-${modalId}`);
+
+            if (categorySelect && subjectSelect) {
+                categorySelect.addEventListener('change', (event) => {
+                    const selectedCategory = encodeURIComponent(event.target.value);
+                    subjectSelect.innerHTML = '<option value="">Fetching subjects..</option>';
+
+                    if (selectedCategory) {
+                        fetch(`${window.location.origin}/api/subjects/by_category/${selectedCategory}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+                            data.forEach(subject => {
+                                const option = document.createElement('option');
+                                option.value = subject.subjectName;
+                                option.textContent = subject.subjectName;
+
+                                if (subject.subjectName === subjectSelect.getAttribute('data-current-subject')) {
+                                    option.selected = true;
+                                }
+                                subjectSelect.appendChild(option);
+                            });
+                        })
+                        .catch((error) => console.error('Error fetching subjects:', error));
+                    }
+                });
+
+                $(modal).on('show.bs.modal', function () {
+                    categorySelect.dispatchEvent(new Event('change'));
+                });
+            }
+        });
+    });
+
+</script>

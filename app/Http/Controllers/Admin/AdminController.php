@@ -203,8 +203,8 @@ class AdminController extends Controller
     }
     // Function for creating subjects in the database
     public function createSubject(Request $request) {
-        // The same validation rule before creation of data in the database tables
         $data = $request->validate([
+            'category' => 'required|string',
             'subjectName' => 'required|string',
             'description' => 'nullable|string'
         ]);
@@ -226,6 +226,7 @@ class AdminController extends Controller
     public function updateSubject(Request $request, Subjects $subject)
     {
         $data = $request->validate([
+            'category' => 'required|string',
             'subjectName' => 'required|string',
             'description' => 'nullable|string',
         ]);
@@ -269,11 +270,17 @@ class AdminController extends Controller
     
         return view('admin.teacher', compact('paginateLoads', 'subjects')); 
     }
+    public function getCategory($categoryId){
+        $subjects = Subjects::where('category', $categoryId)->distinct()->get();
+
+        return response()->json($subjects);
+    }
     // Function for adding new teacher loads
     public function createLoad(Request $request) {
         $loadData = $request->validate([
             'teacherName' => 'required|string',
-            'subjectName' => 'required|string',
+            'categoryName' => 'required|string',
+            'subject_id' => 'required|integer',
             'numberHours' => 'required|integer'
         ]);
     
@@ -290,15 +297,21 @@ class AdminController extends Controller
     }
     // Function for updating teacher loads
     public function updateLoad(Request $request, $id) {
-        $loadData = $request->validate([
+        $request->validate([
             'teacherName' => 'required|string',
+            'categoryName' => 'required|string',
             'subjectName' => 'required|string',
             'numberHours' => 'required|integer'
         ]);
     
         try {
             $teacher = Teachers::findOrFail($id);
-            $teacher->update($loadData);
+            $teacher->update([
+                'teacherName' => $request->input('teacherName'),
+                'categoryName' => $request->input('categoryName'),
+                'subject_id' => Subjects::where('subjectName', $request->input('subjectName'))->first()->id, 
+                'numberHours' => $request->input('numberHours')
+            ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }

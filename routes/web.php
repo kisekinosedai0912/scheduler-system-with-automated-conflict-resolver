@@ -46,10 +46,12 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::delete('/admin/dashboard/{subject}/delete', [AdminController::class, 'deleteSubject'])->name('admin.deleteSubject');
     // Routes for the teachers page
     Route::get('/admin/dashboard/teachers', [AdminController::class, 'teacher'])->name('admin.teacher');
-    Route::post('/admin/dashboard/classroom/create-load', [AdminController::class, 'createLoad'])->name('admin.createLoad');
-    Route::get('/admin/dashboard/{classroom}/edit-load', [AdminController::class, 'editLoad'])->name('admin.editLoad');
-    Route::put('/admin/dashboard/{classroom}/update-load', [AdminController::class, 'updateLoad'])->name('admin.updateLoad');
-    Route::delete('/admin/dashboard/{classroom}/delete-load', [AdminController::class, 'deleteLoad'])->name('admin.deleteLoad');
+    Route::post('/admin/dashboard/teachers/create-load', [AdminController::class, 'createLoad'])->name('admin.createLoad');
+    // Di ni dny pag tanduga
+    //Route::get('/admin/dashboard/create-load/{categoryId}', [AdminController::class, 'getCategory'])->name('admin.category');
+    Route::get('/admin/dashboard/{load}/edit-load', [AdminController::class, 'editLoad'])->name('admin.editLoad');
+    Route::put('/admin/dashboard/{load}/update-load', [AdminController::class, 'updateLoad'])->name('admin.updateLoad');
+    Route::delete('/admin/dashboard/{load}/delete-load', [AdminController::class, 'deleteLoad'])->name('admin.deleteLoad');
     // Routes for the classroom page
     Route::get('/admin/dashboard/classroom', [AdminController::class, 'classroom'])->name('admin.classroom');
     Route::post('/admin/dashboard/classroom/create-room', [AdminController::class, 'createRoom'])->name('admin.createRoom');
@@ -63,7 +65,10 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::patch('/admin/{user}/update-user', [AdminController::class, 'update_user'])->name('admin.update_user');
     Route::delete('/admin/{user}/delete-user', [AdminController::class, 'delete_user'])->name('admin.delete_user');
 });
-// Routes for calendar of events
+
+Route::group(['prefix' => 'api', 'as' => 'api.'], function () {
+    Route::get('/subjects/by_category/{categoryId}', [AdminController::class, 'getCategory'])->name('subjects.by_category');
+});
 
 
 

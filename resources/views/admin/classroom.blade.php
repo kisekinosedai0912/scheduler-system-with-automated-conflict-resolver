@@ -43,7 +43,7 @@
                                 @method('post')
 
                                 <div class="mb-3">
-                                    <input type="text" name="classroomNumber" class="form-control" id="classroom-input" placeholder="Classroom #: " required>
+                                    <input type="text" name="classroomNumber" class="form-control" id="classroom-input" placeholder="Classroom/Laboratory: " required>
                                 </div>
                                 <div class="mb-3">
                                     <input type="text" name="buildingNumber" class="form-control" id="building-input" placeholder="Building #: ">
@@ -51,7 +51,7 @@
                                 <div class="mb-3">
                                     <input type="text" name="floorNumber" class="form-control" id="floor-input" placeholder="Floor #: ">
                                 </div>
-                                
+
                                 {{-- Modal buttons --}}
                                 <div class="modal-button flex items-center justify-end gap-2 mt-3">
                                     <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
@@ -72,8 +72,8 @@
         <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
-                    <th scope="col">Classroom Number</th>
-                    <th scope="col">Building Number</th>
+                    <th scope="col">Classroom/Laboratory</th>
+                    <th scope="col">Building</th>
                     <th scope="col">Floor Number</th>
                     <th scope="col">Action</th>
                 </tr>
@@ -81,9 +81,9 @@
             <tbody>
                 @foreach ($paginateRooms as $room)
                     <tr>
-                        <td>{{ $room->classroomNumber }}</td>
-                        <td>{{ $room->buildingNumber }}</td>
-                        <td>{{ $room->floorNumber }}</td>
+                        <td class="text-md font-light">{{ $room->classroomNumber }}</td>
+                        <td class="text-md font-light">{{ $room->buildingNumber }}</td>
+                        <td class="text-md font-light">{{ $room->floorNumber }}</td>
                         <td class="flex items-center justify-start">
                             <a href="{{ route('admin.editRoom', $room->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#classroomEdit-{{ $room->id }}">
                                 <i class="fas fa-edit"></i>
@@ -104,7 +104,6 @@
             {{ $paginateRooms->links() }}
         </div>
     </span>
-
     {{-- Table for mobile --}}
     <span class="block md:hidden">
         <table class="table shadow-sm">
@@ -119,9 +118,9 @@
             <tbody>
                 @foreach ($paginateRooms as $room)
                     <tr>
-                        <td>{{ $room->classroomNumber }}</td>
-                        <td>{{ $room->buildingNumber }}</td>
-                        <td>{{ $room->floorNumber }}</td>
+                        <td class="text-md font-light">{{ $room->classroomNumber }}</td>
+                        <td class="text-md font-light">{{ $room->buildingNumber }}</td>
+                        <td class="text-md font-light">{{ $room->floorNumber }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -153,7 +152,6 @@
             {{ $paginateRooms->links() }}
         </div>
     </span>
-
 
     @section('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>

@@ -25,7 +25,6 @@
                 <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button>
             </div>
     </div>
-    
     <!-- Modal -->
     <div class="modal fade" id="calendar-events" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -72,7 +71,6 @@
             </div>
         </div>
     </div>
-
     {{-- Event details modal --}}
     <div class="modal fade" id="event-details" tabindex="-1" aria-labelledby="eventDetailsLabel">
         <div class="modal-dialog">

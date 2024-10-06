@@ -1,10 +1,8 @@
 <x-app-layout>
     @section('title', 'Scheduler System with Automated Nursery System')
-
     @section('styles')
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
     @endsection
-
     @section('title-pane', 'Manage Subjects')
 
     <div class="outer-container flex flex-row items-center justify-between px-2 rounded-md bg-white">
@@ -14,8 +12,8 @@
             </svg>
             <input type="search" name="searchSubject" id="search-subject" placeholder="search subject" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 focus:outline-none focus:border-[#223a5e] transition duration-300" value="{{ request('searchSubject') }}">
         </form>
-
-        <div class="buttons flex items-center justify-end gap-2 w-80">{{-- Add button with modal trigger --}}
+        {{-- Add button with modal trigger --}}
+        <div class="buttons flex items-center justify-end gap-2 w-80">
             <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                 <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
                     height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
@@ -25,7 +23,6 @@
                 </svg>
             </button>
         </div>
-
         <!-- subject modal -->
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -42,7 +39,15 @@
                                 @method('post')
 
                                 <div class="mb-3">
-                                  <input type="text" class="form-control" name="subjectName" id="subject-name" placeholder="Subject: ">
+                                    <select name="category" id="category" class="form-control col-span-2 w-full p-2 rounded-md">
+                                        <option disabled selected value="">Subject Category</option>
+                                        <option value="Grade-11 Subjects">Grade-11 Subjects</option>
+                                        <option value="Grade-12 Subjects">Grade-12 Subjects</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                  <input type="text" class="form-control rounded-md" name="subjectName" id="subject-name" placeholder="Subject: ">
                                 </div>
                                 <div class="mb-3">
                                     <textarea name="description" id="description" placeholder="Description.." class="form-control col-span-2 w-full mt-4 pl-2 rounded-md bg-stone-200 scroll-py-1.5"></textarea>
@@ -68,17 +73,19 @@
         <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
-                <th scope="col">Subject Name</th>
-                <th scope="col">Subject Description</th>
-                <th scope="col">Action</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Subject Name</th>
+                    <th scope="col">Subject Description</th>
+                    <th scope="col" class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($paginateSubjects as $subject)
                     <tr>
-                        <td>{{ $subject->subjectName }}</td>
-                        <td>{{ $subject->description }}</td>
-                        <td class="flex items-center justify-start">
+                        <td class="text-md font-light">{{ $subject->category }}</td>
+                        <td class="text-md font-light">{{ $subject->subjectName }}</td>
+                        <td class="text-md font-light">{{ $subject->description }}</td>
+                        <td class="flex items-center justify-center">
                             <a href="{{ route('admin.editSubject', $subject->id) }}" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#editModal-{{ $subject->id }}">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -99,22 +106,23 @@
             {{ $paginateSubjects->links() }}
         </div>
     </span>
-
     {{-- Subject table for mobile --}}
     <span class="block md:hidden">
         <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
-                <th scope="col">Subject Name</th>
-                <th scope="col">Subject Description</th>
-                <th scope="col">Action</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Subject Name</th>
+                    <th scope="col">Subject Description</th>
+                    <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($paginateSubjects as $subject)
                     <tr>
-                        <td>{{ $subject->subjectName }}</td>
-                        <td>{{ $subject->description }}</td>
+                        <td class="text-md font-light">{{ $subject->category }}</td>
+                        <td class="text-md font-light">{{ $subject->subjectName }}</td>
+                        <td class="text-md font-light">{{ $subject->description }}</td>
                         <td>
                             <div class="dropdown">
                                 <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
