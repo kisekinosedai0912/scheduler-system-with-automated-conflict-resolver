@@ -6,7 +6,7 @@
     @endsection
     @section('title-pane', 'User Management')
 
-    <div class="outer-container flex items-center justify-evenly md:justify-between bg-white rounded-sm md:px-2">
+    <div class="outer-container flex items-center justify-between bg-white rounded-sm px-2">
         {{-- Search input box--}}
         <form class="flex items-center relative md:w-3/12 my-2" id="search-form">
             <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
@@ -15,18 +15,16 @@
             <input type="search" id="search" name="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1. rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300" value="{{ request('search') }}">
         </form>
 
-        <div class="buttons flex items-center justify-evenly w-80">
-            <div class="buttons flex items-center justify-end gap-2 w-80">
-                {{-- Add button with modal trigger --}}
-                <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#create-user-modal">
-                    <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
-                        height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-width="1" d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"></path>
-                        <path stroke-width="1" d="M8 12H16"></path>
-                        <path stroke-width="1" d="M12 16V8"></path>
-                    </svg>
-                </button>
-            </div>    
+        <div class="buttons flex items-center justify-between">
+            {{-- Add button with modal trigger --}}
+            <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#create-user-modal">
+                <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
+                    height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-width="1" d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"></path>
+                    <path stroke-width="1" d="M8 12H16"></path>
+                    <path stroke-width="1" d="M12 16V8"></path>
+                </svg>
+            </button>
         </div>
         <!-- Modal -->
         <div class="modal fade" id="create-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">

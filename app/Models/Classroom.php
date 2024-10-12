@@ -11,7 +11,7 @@ class Classroom extends Model
     protected $table = 'classroom';
 
     protected $fillable = [
-        'classroomNumber',
+        'roomName',
         'buildingNumber',
         'floorNumber'
     ];

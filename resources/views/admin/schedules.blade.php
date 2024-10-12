@@ -44,28 +44,59 @@
                     </div>
                     <div class="modal-body">
                         {{-- Modal form --}}
-                        <form action="{{ route('admin.createSchedule') }}" method="post" name="schedulesForm" id="schedules-form" class="inputs grid grid-cols-2 gap-4">
+                        <form action="{{ route('admin.createSchedule') }}" method="post" name="schedulesForm" id="schedules-form" class="grid grid-cols-2 gap-4">
                             @csrf
                             @method('post')
+                        
+                            {{-- Teacher Dropdown --}}
+                            <select name="teacher_id" id="teacher_id" class="form-control col-span-2">
+                                <option value="">Select Teacher</option>
+                                @foreach($teachers->unique('teacherName') as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
+                                @endforeach
+                            </select>
 
-                            {{-- Input controls --}}
-                            <input type="text" name="teacherName" id="teacher-name" class="form-control col-span-2 w-full p-2 rounded-xl" placeholder="Teacher Name: ">
-                            <input type="text" name="subject" id="subject" class="form-control w-full p-2 rounded-xl" placeholder="Subject: ">
-                            <input type="text" name="studentNum" id="student-number" class="form-control w-full p-2 rounded-xl" placeholder="Student No.: ">
-                            <input type="text" name="yearSection" id="year-section" class="form-control w-full p-2 rounded-xl" placeholder="Year & Section: ">
-                            <input type="text" name="room" id="room" class="form-control w-full p-2 rounded-xl" placeholder="Room: ">
-                            
+                            <select id="category-select" name="categoryName" class="form-control col-span-2">
+                                <option value="">Select Category</option>
+                                @foreach($subjects->unique('category') as $subject)
+                                    <option value="{{ $subject->category }}">{{ $subject->category }}</option>
+                                @endforeach
+                            </select>
+                        
+                            {{-- Subject Dropdown --}}
+                            <select name="subject_id" id="subject_id" class="form-control">
+                                <option value="">Select Subject</option>
+                                @foreach($subjects->unique('subjectName') as $subject)
+                                    <option value="{{ $subject->id }}">{{ $subject->subjectName }}</option>
+                                @endforeach
+                            </select>
+                        
+                            {{-- Classroom Dropdown --}}
+                            <select name="room_id" id="room_id" class="form-control">
+                                <option value="">Select Room</option>
+                                @foreach($classrooms->unique('roomName') as $classroom)
+                                    <option value="{{ $classroom->id }}">{{ $classroom->roomName }}</option>
+                                @endforeach
+                            </select>
+                        
+                            {{-- Student No. Input --}}
+                            <input type="text" name="studentNum" id="student-number" class="form-control w-full p-2 rounded-md" placeholder="Student No.">
+                        
+                            {{-- Year & Section Input --}}
+                            <input type="text" name="yearSection" id="year-section" class="form-control w-full p-2 rounded-md" placeholder="Year & Section">
+                        
+                            {{-- Time Inputs (2 Column) --}}
                             <div class="col-span-2 grid grid-cols-2 gap-4">
-                                <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-xl timepicker" placeholder="Start Time (e.g. 02:30 PM)">
-                                <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-xl timepicker" placeholder="End Time (e.g. 03:30 PM)">
-                            </div>                            
-
-                             {{-- Buttons --}}
+                                <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-md timepicker" placeholder="Start Time (e.g. 02:30 PM)">
+                                <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-md timepicker" placeholder="End Time (e.g. 03:30 PM)">
+                            </div>
+                        
+                            {{-- Action Buttons --}}
                             <div class="flex justify-end gap-2 col-span-2">
                                 <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
                                 <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Save</button>
                             </div>
-                        </form>
+                        </form>                                               
                     </div>
                 </div>
             </div>
@@ -77,10 +108,11 @@
         <thead>
             <tr>
                 <th>Teacher Name</th>
+                <th>Category</th>
                 <th>Subject</th>
+                <th>Room</th>
                 <th>No. of Student</th>
                 <th>Section/Year</th>
-                <th>Room</th>
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Actions</th>
@@ -89,11 +121,12 @@
         <tbody>
             @foreach ($schedules as $schedule)
                 <tr>
-                    <td class="text-md font-light">{{ $schedule->teacherName }}</td>
-                    <td class="text-md font-light">{{ $schedule->subject }}</td>
+                    <td class="text-md font-light">{{ $schedule->teacher->teacherName }}</td>
+                    <td class="text-md font-light">{{ $schedule->categoryName }}</td>
+                    <td class="text-md font-light">{{ $schedule->subject->subjectName }}</td>
+                    <td class="text-md font-light">{{ $schedule->classroom->roomName }}</td>
                     <td class="text-md font-light">{{ $schedule->studentNum }}</td>
                     <td class="text-md font-light">{{ $schedule->yearSection }}</td>
-                    <td class="text-md font-light">{{ $schedule->room }}</td>
                     <td class="text-md font-light">{{ $schedule->startTime }}</td>
                     <td class="text-md font-light">{{ $schedule->endTime }}</td>
                     <td class="flex items-center justify-start">
@@ -120,6 +153,39 @@
         <script src="//cdn.datatables.net/2.1.6/js/dataTables.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
         <script>
+            const subjectSelect = document.getElementById('subject_id');
+            const categorySelection = document.getElementById('category-select');
+            // Event listener for dynamic fetching of subjects based on the category selected
+            categorySelection.addEventListener('change', function() {
+                const categoryId = encodeURIComponent(this.value);
+
+                subjectSelect.innerHTML = '<option value="">Fetching subjects..</option>';
+
+                if (categoryId) {
+                    fetch(`${window.location.origin}/api/subjects/by_category/${categoryId}`) // fetch the api endpoint and make use of the current server host
+                        .then(response => response.json())
+                        .then(data => {
+                            data.forEach(subject => {
+                                const option = document.createElement('option');
+                                option.value = subject.id; 
+                                option.textContent = subject.subjectName; 
+                                subjectSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error fetching subjects:', error));
+                }
+            });
+            // Event listener for typing subject optionally instead of choosing from the dropdown
+            subjectSelect.addEventListener('input', function(e) {
+                const filter = e.target.value.toLowerCase();
+                const options = e.target.querySelectorAll('option');
+
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    option.style.display = text.includes(filter) ? 'block' : 'none';
+                });
+            });
+
             function confirmDeletion(event, formId) {
                 event.preventDefault(); 
         
@@ -137,8 +203,7 @@
                     }
                 });
             }
-        </script>
-        <script>
+
             $(document).ready(function() {
                 $('#schedulesTable').DataTable();
             });

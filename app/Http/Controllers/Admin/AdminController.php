@@ -112,8 +112,12 @@ class AdminController extends Controller
     }
     // Function for returning view in the schedule page of the admin dashboard
     public function schedules() {
-        $schedules = Schedules::all(); // Retrieve all of the data in the schedules table model
-        return view('admin.schedules', ['schedules' => $schedules]); // Returns a key $schedules and redirects to the schedules page
+        $schedules = Schedules::withTrashed()->get();
+        $teachers = Teachers::withTrashed()->get();
+        $subjects = Subjects::all();
+        $classrooms = Classroom::all();
+    
+        return view('admin.schedules', compact('schedules', 'teachers', 'subjects', 'classrooms'));
     }
     // Function for editing schedules
     public function editSchedule(Schedules $schedules) {
@@ -126,17 +130,18 @@ class AdminController extends Controller
             'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
             'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
         ]);
-        // Validate the update request
+
         $scheduleData = $request->validate([
-            'teacherName' => 'required|string',
-            'subject' => 'required|string',
-            'studentNum' => 'required|integer',
-            'yearSection' => 'required|string',
-            'room' => 'required|string',
+            'teacher_id' => 'required',
+            'categoryName' => 'required',
+            'subject_id' => 'required',
+            'studentNum' => 'required',
+            'yearSection' => 'nullable|string',
+            'room_id' => 'required',
             'startTime' => 'required|date_format:H:i:s',
             'endTime' => 'required|date_format:H:i:s',
         ]);
-        // Logic for handling a success and error cases
+
         try {
             $schedules->update($scheduleData);
 
@@ -148,18 +153,18 @@ class AdminController extends Controller
     }
     // Function for creating schedules
     public function createSchedule(Request $request) {
-        // The same as  the code above
         $request->merge([
             'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
             'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
         ]);
-        // Validate the create request
+    
         $scheduleData = $request->validate([
-            'teacherName' => 'required|string',
-            'subject' => 'required|string',
+            'teacher_id' => 'required',
+            'categoryName' => 'required',
+            'subject_id' => 'required',
             'studentNum' => 'required|integer',
-            'yearSection' => 'required|string',
-            'room' => 'required|string',
+            'yearSection' => 'nullable|string',
+            'room_id' => 'required',
             'startTime' => 'required|date_format:H:i:s', 
             'endTime' => 'required|date_format:H:i:s',   
         ]);
@@ -176,8 +181,8 @@ class AdminController extends Controller
     public function deleteSchedule($id) {
         // The same thing as for the other deletion functions
         try {
-            $scheduleData = Schedules::findOrFail($id);
-            $scheduleData->delete();
+            $scheduleData = Schedules::withTrashed()->findOrFail($id);
+            $scheduleData->forceDelete();
 
             return redirect()->route('admin.schedules')->with('success', 'Schedule deleted successfully.');
             
@@ -255,21 +260,18 @@ class AdminController extends Controller
     }
     // Function for returning view in the teacher loads page of the admin dashboard
     public function teacher(Request $request) { 
-        $subjects = Subjects::all(); 
-        $query = Teachers::with('subject');
 
+        $query = Teachers::query(); 
+        
         if ($request->has('searchTeacher')) {
             $search = $request->input('searchTeacher');
-            $query->where('teacherName', 'LIKE', "%{$search}%") 
-                  ->orWhereHas('subject', function($q) use ($search) {
-                      $q->where('subjectName', 'LIKE', "%{$search}%"); 
-                  });
+            $query->where('teacherName', 'LIKE', "%{$search}%");
         }
+        $paginateLoads = $query->paginate(7);
     
-        $paginateLoads = $query->paginate(7); 
-    
-        return view('admin.teacher', compact('paginateLoads', 'subjects')); 
+        return view('admin.teacher', compact('paginateLoads')); 
     }
+    // Function for the api route to get the data in the subjects table and populate the subject dropdown with the subjects based on the selected category 
     public function getCategory($categoryId){
         $subjects = Subjects::where('category', $categoryId)->distinct()->get();
 
@@ -279,8 +281,8 @@ class AdminController extends Controller
     public function createLoad(Request $request) {
         $loadData = $request->validate([
             'teacherName' => 'required|string',
-            'categoryName' => 'required|string',
-            'subject_id' => 'required|integer',
+            'email' => 'required|string',
+            'contact' => 'required|string',
             'numberHours' => 'required|integer'
         ]);
     
@@ -299,8 +301,8 @@ class AdminController extends Controller
     public function updateLoad(Request $request, $id) {
         $request->validate([
             'teacherName' => 'required|string',
-            'categoryName' => 'required|string',
-            'subjectName' => 'required|string',
+            'email' => 'required|string',
+            'contact' => 'required|string',
             'numberHours' => 'required|integer'
         ]);
     
@@ -308,8 +310,9 @@ class AdminController extends Controller
             $teacher = Teachers::findOrFail($id);
             $teacher->update([
                 'teacherName' => $request->input('teacherName'),
-                'categoryName' => $request->input('categoryName'),
-                'subject_id' => Subjects::where('subjectName', $request->input('subjectName'))->first()->id, 
+                'email' => $request->input('email'),
+                //'subject_id' => Subjects::where('subjectName', $request->input('subjectName'))->first()->id, 
+                'contact' => $request->input('contact'),
                 'numberHours' => $request->input('numberHours')
             ]);
         } catch (\Exception $e) {
@@ -350,7 +353,7 @@ class AdminController extends Controller
     // Function for creating rooms in the database 
     public function createRoom(Request $request) {
         $roomData = $request->validate([
-            'classroomNumber' => 'required|string',
+            'roomName' => 'required|string',
             'buildingNumber' => 'nullable|string',
             'floorNumber' => 'nullable|string'
         ]);
@@ -369,7 +372,7 @@ class AdminController extends Controller
     // Function for updating the classroom details
     public function updateRoom(Request $request, Classroom $classroom) {
         $data = $request->validate([
-            'classroomNumber' => 'required|string',
+            'roomName' => 'required|string',
             'buildingNumber' => 'nullable|string',
             'floorNumber' => 'nullable|string'
         ]);

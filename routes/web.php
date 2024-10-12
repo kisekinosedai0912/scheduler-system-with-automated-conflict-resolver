@@ -65,7 +65,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::patch('/admin/{user}/update-user', [AdminController::class, 'update_user'])->name('admin.update_user');
     Route::delete('/admin/{user}/delete-user', [AdminController::class, 'delete_user'])->name('admin.delete_user');
 });
-
+// API route for dynamic filtering of subjects based on the category selection
 Route::group(['prefix' => 'api', 'as' => 'api.'], function () {
     Route::get('/subjects/by_category/{categoryId}', [AdminController::class, 'getCategory'])->name('subjects.by_category');
 });

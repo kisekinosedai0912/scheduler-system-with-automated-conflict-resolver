@@ -17,31 +17,15 @@
                             <input type="text" name="teacherName" id="teacher-name-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->teacherName }}" required>
                         </div>
 
-                        {{-- Display Currentt Category --}}
                         <div class="mb-3">
-                            <select id="category-select-{{ $teacher->id }}" name="categoryName" class="form-control">
-                                <option value="">Select Category</option>
-                                @foreach($subjects->unique('category') as $subject)
-                                    <option value="{{ $subject->category }}" {{ $subject->category == $teacher->category ? 'selected' : '' }}>
-                                        {{ $subject->category }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="email" id="email-{{ $teacher->id }}" name="email" class="form-control" placeholder="Email" value="{{ $teacher->email }}" required />
                         </div>
 
-                        {{-- Pre-select Subject --}}
                         <div class="mb-3">
-                            <select name="subjectName" id="subject-name-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" required>
-                                <option value="">Subjects</option>
-                                @foreach($subjects as $subject)
-                                    <option value="{{ $subject->subjectName }}" {{ $subject->subjectName == $teacher->subjectName ? 'selected' : '' }}>
-                                        {{ $subject->subjectName }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" id="contact-{{ $teacher->id }}" name="contact" class="form-control" placeholder="Contact Number" value="{{ $teacher->contact }}" required />
                         </div>
 
-                        {{-- Display Current Number of Hours --}}
+                        {{-- Display Current Total Load Hours --}}
                         <div class="mb-3">
                             <input type="text" name="numberHours" id="number-hours-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->numberHours }}" required>
                         </div>

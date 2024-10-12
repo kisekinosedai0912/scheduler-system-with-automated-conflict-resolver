@@ -13,7 +13,7 @@
                         @method('PUT')
 
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="classroomNumber" id="classroom-input-{{ $room->id }}" value="{{ $room->classroomNumber }}" required>
+                            <input type="text" class="form-control" name="roomName" id="classroom-input-{{ $room->id }}" value="{{ $room->roomName }}" required>
                         </div>
                         <div class="mb-3">
                             <input type="text" class="form-control" name="buildingNumber" id="building-input-{{ $room->id }}" value="{{ $room->buildingNumber }}">
