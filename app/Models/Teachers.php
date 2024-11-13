@@ -10,6 +10,7 @@ class Teachers extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
     protected $table = 'teachers';
     protected $fillable = [
         'teacherName',
@@ -17,5 +18,10 @@ class Teachers extends Model
         'contact',
         'numberHours'
     ];
-    public $timestamps = false; 
+    public $timestamps = false;
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'teacher_id', 'id');
+    }
 }

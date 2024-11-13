@@ -27,33 +27,38 @@
             </button>
         </div>
         <!-- Modal -->
-        <div class="modal fade" id="create-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal fade" id="create-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     {{-- Modal header --}}
                     <div class="modal-header text-center bg-[#223a5e]">
-                        <h1 class="modal-title fs-5 text-center text-neutral-100" id="staticBackdropLabel">Register New User</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+                        <h1 class="modal-title fs-5 text-center text-neutral-100">Register New User</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" aria-hidden="false" style="filter: brightness(0) invert(1);"></button>
                     </div>
                     {{-- Modal body --}}
                     <div class="modal-body">
-                        <form method="post" action="{{ route('auth.store_user') }}">
+                        <form id="create-user-form" method="post">
                             @csrf
                             @method('post')
-                            <!-- Name -->
-                            <div>
-                                <x-input-label for="name" :value="__('Name')" />
-                                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autocomplete="name" />
-                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+
+                            <!-- Teacher Selection -->
+                            <div class="mt-4">
+                                <x-input-label for="teacher_id" :value="__('Select Teacher')" />
+                                <select name="teacher_id" id="teacher_id" class="form-select rounded-md" required>
+                                    <option value="">Select a Teacher</option>
+                                    @foreach($teachers as $teacher)
+                                        <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-    
+
                             <!-- Email Address -->
                             <div class="mt-4">
                                 <x-input-label for="email" :value="__('Email')" />
                                 <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
-                            
+
                             <!-- User Role -->
                             <div class="mt-4">
                                 <x-input-label for="roleSelect" :value="__('Select Role')" />
@@ -66,33 +71,29 @@
                             <!-- Password -->
                             <div class="mt-4">
                                 <x-input-label for="password" :value="__('Password')" />
-                    
                                 <x-text-input id="password" class="block mt-1 w-full"
                                                 type="password"
                                                 name="password"
                                                 required autocomplete="new-password" />
-                    
                                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
                             </div>
-                    
+
                             <!-- Confirm Password -->
                             <div class="mt-4">
                                 <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                    
                                 <x-text-input id="password_confirmation" class="block mt-1 w-full"
                                                 type="password"
                                                 name="password_confirmation" required autocomplete="new-password" />
-                    
                                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                             </div>
-                    
+
                             <div class="flex items-center justify-end mt-4">
-                                <x-primary-button class="ms-4">
+                                <x-primary-button id="submit-user-btn" class="ms-4">
                                     {{ __('Register') }}
                                 </x-primary-button>
                             </div>
                         </form>
-					</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,7 +136,7 @@
         </table>
         <div class="mt-4" id="paginationLinks">
             {{ $users->links() }}
-        </div>        
+        </div>
     </span>
     {{-- Table for mobile--}}
     <span class="block md:hidden">
@@ -194,9 +195,9 @@
             $(document).ready(function () {
                 // Event listener for searching
                 $('#search').on('keypress', function (e) {
-                if (e.which === 13) { 
+                if (e.which === 13) {
                         e.preventDefault();
-                        $('#search-form').submit(); 
+                        $('#search-form').submit();
                     }
                 });
                 // Revert the table back after the search input is empty
@@ -206,11 +207,80 @@
                         $('#search-form').submit();
                     }
                 });
+
+                // Form submission via AJAX
+                $('#create-user-form').on('submit', function(e) {
+                    e.preventDefault();
+
+                    // Disable submit button to prevent multiple submissions
+                    $('#submit-user-btn').prop('disabled', true);
+
+                    $.ajax({
+                        url: "{{ route('auth.store_user') }}",
+                        method: 'POST',
+                        data: $(this).serialize(),
+                        success: function(response) {
+                            // Check if success is true or message exists
+                            if (response.success || response.message) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.message || 'User created successfully',
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                }).then(() => {
+                                    // Redirect if a redirect URL is provided
+                                    if (response.redirect) {
+                                        window.location.href = response.redirect;
+                                    } else {
+                                        // Optionally reload the page
+                                        location.reload();
+                                    }
+                                });
+
+                                // Reset the form
+                                $('#create-user-form')[0].reset();
+
+                                // Close the modal
+                                $('#create-user-modal').modal('hide');
+                            }
+                        },
+                        error: function(xhr) {
+                            // Enable submit button
+                            $('#submit-user-btn').prop('disabled', false);
+
+                            // Handle different types of errors
+                            let errorMessage = 'An unexpected error occurred';
+
+                            if (xhr.responseJSON) {
+                                // Check for specific error messages
+                                errorMessage = xhr.responseJSON.error ||
+                                            xhr.responseJSON.message ||
+                                            errorMessage;
+
+                                // Handle validation errors
+                                if (xhr.status === 422) {
+                                    let errors = xhr.responseJSON.errors;
+                                    if (errors) {
+                                        errorMessage = Object.values(errors).flat().join('<br>');
+                                    }
+                                }
+                            }
+
+                            // Show error
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: errorMessage
+                            });
+                        }
+                    });
+                });
             });
             // Delete confirmation function with sweet alert library pop up
             function confirmDeletion(event, formId) {
-                    event.preventDefault(); 
-            
+                    event.preventDefault();
+
                     Swal.fire({
                         title: 'Are you sure?',
                         text: "You won't be able to revert this!",

@@ -52,9 +52,9 @@
                                 <input type="text" id="contact" name="contact" class="form-control" placeholder="Contact Number" required />
                             </div>
 
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <input type="text" name="numberHours" id="number-hours" class="form-control col-span-2 w-full p-2 rounded-md" placeholder="Total Load Hours">
-                            </div>
+                            </div> --}}
 
                             {{-- Modal buttons --}}
                             <div class="modal-button flex items-center justify-end gap-2 mt-3">
@@ -165,9 +165,9 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
         <script>
             $('#search-teacher').on('keypress', function (e) {
-                if (e.which === 13) { 
+                if (e.which === 13) {
                     e.preventDefault();
-                    $('#search-teacher-form').submit(); 
+                    $('#search-teacher-form').submit();
                 }
             });
 
@@ -178,8 +178,8 @@
             });
 
             function confirmDeletion(event, formId) {
-                event.preventDefault(); 
-        
+                event.preventDefault();
+
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You won't be able to revert this!",

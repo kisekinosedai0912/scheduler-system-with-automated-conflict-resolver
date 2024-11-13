@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreign('subject_id')->references('id')->on('subjects');
             $table->integer('studentNum');
             $table->string('yearSection');
+            $table->string('days', 5);
             $table->integer('room_id');
             $table->time('startTime');
             $table->time('endTime');

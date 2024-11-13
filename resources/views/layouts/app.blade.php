@@ -24,61 +24,68 @@
 
         <!-- Page Heading -->
         <span class="hidden md:block">
-            <div class="flex items-center justify-between bg-[#223a5e] p-6 md:ml-64 md:w-screen-2xl">
-                <div class="school-name flex items-center justify-between gap-2">
+            <div class="flex items-center justify-between bg-[#223a5e] p-6 md:w-screen">
+                <div class="school-name flex items-center justify-between lg:ml-80 gap-2">
                     <span>
                         <img src="{{ URL('images/schsLogo.jfif') }}" alt="SCHS logo" width="70" height="70">
                     </span>
                     <h1 class="font-bold md:text-2xl font-open text-neutral-100">Sagay City National High School - Stand Alone</h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="relative inline-block">
+                    {{-- <div class="relative inline-block">
                         <i class="fas fa-bell text-xl text-white"></i>
                         <span class="absolute top-0 right-0 block w-3 h-3 bg-red-500 text-white text-xs font-bold rounded-full text-center">0</span>
-                    </div>
-                    
+                    </div> --}}
+
                     <!-- Settings Dropdown -->
-                    <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
-                            <x-slot name="trigger">
-                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                                    <div>{{ Auth::user()->name }}</div>
+                    @if (Auth::user()->user_role == 'admin')
+                        <div class="hidden sm:flex sm:items-center sm:ms-6">
+                            <x-dropdown align="right" width="48">
+                                <x-slot name="trigger">
+                                    <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                        <div>{{ Auth::user()->name }}</div>
 
-                                    <div class="ms-1">
-                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            </x-slot>
+                                        <div class="ms-1">
+                                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                </x-slot>
 
-                            <x-slot name="content">
-                                <x-dropdown-link :href="route('profile.edit')" class="no-underline hover:bg-gray-100">
-                                    <i class="fas fa-user"></i>
-                                    {{ __('Profile') }}
-                                </x-dropdown-link>
-
-                                <!-- Authentication -->
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    
-                                    <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="no-underline text-red-500 hover:bg-red-100">
-                                        <i class="fas fa-sign-out-alt text-red-500"></i>
-                                        {{ __('Log Out') }}
+                                <x-slot name="content">
+                                    <x-dropdown-link :href="route('profile.edit')" class="no-underline hover:bg-gray-100">
+                                        <i class="fas fa-user"></i>
+                                        {{ __('Profile') }}
                                     </x-dropdown-link>
-                                </form>
-                            </x-slot>
-                        </x-dropdown>
-                    </div> 
+
+                                    <!-- Authentication -->
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+
+                                        <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="no-underline text-red-500 hover:bg-red-100">
+                                            <i class="fas fa-sign-out-alt text-red-500"></i>
+                                            {{ __('Log Out') }}
+                                        </x-dropdown-link>
+                                    </form>
+                                </x-slot>
+                            </x-dropdown>
+                        </div>
+                    @else
+                        <div class="hidden sm:flex sm:items-center sm:ms-6">
+                            <div class="text-neutral-100 font-medium">{{ Auth::user()->name }}</div>
+                        </div>
+                    @endif
+
                 </div>
             </div>
         </span>
 
         <!-- Page Content -->
-        <main class="md:w-[calc(100vw-16rem)] w-screen h-screen md:ml-64 bg-neutral-100 p-6 relative">
-            <h1 class="font-normal md:text-2xl md:ml-4 text-xl mb-2">@yield('title-pane')</h1>
+        <main class="md:w-[calc(100vw-20rem)] w-screen h-screen md:ml-64 lg:ml-80 bg-neutral-100 p-6 relative">
+            <h1 class="font-semibold md:text-2xl md:ml-4 text-xl mb-2">@yield('title-pane')</h1>
             {{ $slot }}
-    
+
         </main>
 
         {{-- Bootstrap js script --}}

@@ -4,7 +4,6 @@
 
     @section('styles')
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css" />
-        {{-- <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' rel='stylesheet' /> --}}
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -82,15 +81,12 @@
                 </div>
                 <div class="modal-body">
                     <p><strong>Event Title:</strong> <span id="modal-event-title"></span></p>
-                    <div class=" grid grid-cols-2 gap-2 mt-2">
+                    <div class=" grid grid-cols-2 gap-2 mt-2 mb-3">
                         <p><strong>Start Date:</strong> <span id="modal-event-start"></span></p>
                         <p><strong>Start Time:</strong> <span id="modal-event-timeStart"></span></p>
                         <p><strong>End Date:</strong> <span id="modal-event-end"></span></p>
                         <p><strong>End Time:</strong> <span id="modal-event-timeEnd"></span></p>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" id="delete-btn" class="bg-red-600 p-2 w-[120px] text-white rounded-lg" id="delete-btn" data-bs-dismiss="modal">Delete Event</button>
                 </div>
             </div>
         </div>
@@ -103,7 +99,6 @@
             </div>
         </div>
     </div>
-
 
     @section('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -137,82 +132,11 @@
                     },
                     // Call the events and stack them
                     events,
-                    editable: true,
+                    editable: false,
                     selectable: true,
                     selectHelper: true,
                     aspectRatio: 2,
-                    select (start, end, allDay) {
-                        $('#calendar-events').modal('toggle');
-
-                        $('#save-btn').off('click').on('click', function() {
-                            let eventTitle = $('#event-title').val();
-                            let startDate = moment($('#start-date').val() + 'T' + $('#start-time').val()).format('Y-MM-DDTHH:mm:ss');
-                            let endDate = moment($('#end-date').val() + 'T' + $('#end-time').val()).format('Y-MM-DDTHH:mm:ss');
-                            let newEventColor = startDate === prevEventStartTime ? 'red' : 'green';
-
-                            $.ajax({
-                                url: "{{ route('admin.createEvent') }}",
-                                type: "POST",
-                                dataType: "json",
-                                data: {
-                                    title: eventTitle,
-                                    start: startDate,
-                                    end: endDate,
-                                    startTime: $('#start-time').val(),
-                                    endTime: $('#end-time').val()
-                                },
-                                success: function(response) {
-                                    $('#calendar-events').modal('hide');
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success',
-                                        text: response.success || 'Added successfully'
-                                    });
-
-                                    $('#calendar').fullCalendar('renderEvent', {
-                                        title: eventTitle,
-                                        start: startDate,
-                                        end: endDate,
-                                        allDay: false,
-                                        color: newEventColor,
-                                    }, false);
-
-                                    events.push({
-                                        title: eventTitle,
-                                        start: startDate,
-                                        end: endDate,
-                                        allDay: false,
-                                        color: newEventColor,
-                                    });
-
-                                    $('#calendar').fullCalendar('removeEventSources');
-                                    $('#calendar').fullCalendar('addEventSource', events.concat([{
-                                        title: eventTitle,
-                                        start: startDate,
-                                        end: endDate,
-                                        allDay: false
-                                    }]));
-
-                                    $('#event-title').val('');
-                                    $('#start-date').val('');
-                                    $('#start-time').val('');
-                                    $('#end-date').val('');
-                                    $('#end-time').val('');
-                                },
-                                error: function(error) {
-                                    if (error.responseJSON.errors) {
-                                        $('#titleError').html(error.responseJSON.errors.title || '');
-                                    }
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: error.responseJSON.message || 'An unexpected error occurred.'
-                                    });
-                                }
-                            });
-                        });
-                    },
-                    // Function to show the modal about the events
+                    // Function to show the modal about the events information in the calendar
                     eventClick: function(event) {
                         let eventId = event.id;
                         const url = `{{ url('/admin') }}/${eventId}/delete-event`;
@@ -228,112 +152,6 @@
                         $('#modal-event-timeEnd').text(event.end ? moment(event.end).format('h:mm A') : 'No end time');
 
                         $('#event-details').modal('show');
-
-                        $('#delete-btn').off('click').on('click', function() {
-                            confirmDeletion(event, eventId, url);
-                        });
-                        // Function to confirm before deletion of event
-                        function confirmDeletion(event, eventId, url) {
-                            Swal.fire({
-                                title: 'Are you sure?',
-                                text: "You won't be able to revert this!",
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#223a5e',
-                                cancelButtonColor: '#d33',
-                                confirmButtonText: 'Yes, delete it!'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    $.ajax({
-                                        url: url,
-                                        type: "DELETE",
-                                        dataType: "json",
-                                        success: function(response) {
-                                            Swal.fire({
-                                                toast: true,
-                                                position: 'top-end',
-                                                icon: 'success',
-                                                title: 'Event deleted successfully!',
-                                                showConfirmButton: false,
-                                                timer: 1000,
-                                                timerProgressBar: true
-                                            });
-                                            $('#event-details').modal('hide');
-                                            $('#calendar').fullCalendar('removeEvents', eventId);
-                                        },
-                                        error: function(error) {
-                                            Swal.fire({
-                                                icon: 'error',
-                                                title: 'Error',
-                                                text: error.responseJSON.message || 'An unexpected error occurred.'
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    },
-                    // Function for the resizing of calendar based on the screen
-                    eventResize: function(event) {
-                        let eventId = event.id;
-                        let newEndDate = event.end.format();
-
-                        $.ajax({
-                            url: `/admin/${eventId}/resize`,
-                            type: 'PUT',
-                            data: {
-                                endDate: newEndDate
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Success',
-                                    text: response.message
-                                });
-                            },
-                            error: function(error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: error.responseJSON.message || 'An unexpected error occurred.'
-                                });
-                            }
-                        });
-                    },
-                    // Function for event drag and drop
-                    eventDrop(event) {
-                        const eventId = event.id;
-                        const startDate = moment(event.start).format('YYYY-MM-DD');
-                        const endDate = moment(event.end).format('YYYY-MM-DD');
-                        const url = `{{ url('/admin') }}/${eventId}/drag-drop`;
-
-                        $.ajax({
-                            url: url,
-                            method: 'PATCH',
-                            data: { startDate, endDate },
-                            success(response) {
-                                Swal.fire({
-                                    toast: true,
-                                    position: 'top-end',
-                                    icon: 'success',
-                                    title: 'Event updated successfully!',
-                                    showConfirmButton: false,
-                                    timer: 1000,
-                                    timerProgressBar: true,
-                                });
-                            },
-                            error(error) {
-                                Swal.fire({
-                                    toast: true,
-                                    position: 'top-end',
-                                    icon: 'error',
-                                    title: 'Error updating event',
-                                    showConfirmButton: false,
-                                    timer: 1000,
-                                    timerProgressBar: true
-                                });
-                            }
-                        });
                     },
                 });
                 // Fetching searched events on the search input
