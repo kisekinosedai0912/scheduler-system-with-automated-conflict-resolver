@@ -110,6 +110,7 @@
             {{ $paginateLoads->links() }}
         </div>
     </span>
+
     {{-- Table for mobile--}}
     <span class="block md:hidden">
         <table class="table shadow-sm">

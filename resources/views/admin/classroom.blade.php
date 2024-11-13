@@ -35,6 +35,7 @@
                     <div class="modal-header text-center bg-[#223a5e]">
                         <h1 class="modal-title fs-5 text-center text-neutral-100" id="staticBackdropLabel">Add New Classroom</h1>
                     </div>
+
                     {{-- Modal body --}}
                     <div class="modal-body">
                         <div class="inputs">
@@ -94,7 +95,7 @@
                                 <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-room-{{ $room->id }}')">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                            </form>                            
+                            </form>
                         </td>
                     </tr>
                 @endforeach
@@ -104,6 +105,7 @@
             {{ $paginateRooms->links() }}
         </div>
     </span>
+
     {{-- Table for mobile --}}
     <span class="block md:hidden">
         <table class="table shadow-sm">
@@ -139,10 +141,10 @@
                                             <a href="#" class="text-md ml-4" onclick="confirmDeletion(event, 'delete-room-{{ $room->id }}')">
                                                 Delete
                                             </a>
-                                        </form> 
+                                        </form>
                                     </li>
                                 </ul>
-                            </div>                      
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -159,12 +161,12 @@
         <script>
             $(document).ready(function () {
                 $('#search-room').on('keypress', function (e) {
-                if (e.which === 13) { 
+                if (e.which === 13) {
                         e.preventDefault();
-                        $('#search-room-form').submit(); 
+                        $('#search-room-form').submit();
                     }
                 });
-    
+
                 $('#search-room').on('input', function () {
                     if ($(this).val().trim() === "") {
                         $('#search-room-form').submit();
@@ -172,8 +174,8 @@
                 });
             });
             function confirmDeletion(event, formId) {
-                event.preventDefault(); 
-        
+                event.preventDefault();
+
                 Swal.fire({
                     title: 'Are you sure you want to delete this?',
                     text: "You won't be able to revert this!",

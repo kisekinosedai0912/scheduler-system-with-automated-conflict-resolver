@@ -41,6 +41,7 @@ class Schedules extends Model
 
     // Private function exclusive only to the schedules model, this function will handle the checking of the conflicted schedules
     public function hasConflict() {
+        // Debugging statement in case of errors
         \Log::info('Checking conflicts for schedule', [
             'schedule_id' => $this->id,
             'teacher_id' => $this->teacher_id,
@@ -56,7 +57,7 @@ class Schedules extends Model
         return Schedules::where('teacher_id', $this->teacher_id)
             ->where('id', '!=', $this->id)
             ->where(function($query) {
-                // Time overlap conditions
+                // Query the time constraints and check if they overlap
                 $query->whereBetween('startTime', [$this->startTime, $this->endTime])
                       ->orWhereBetween('endTime', [$this->startTime, $this->endTime])
                       ->orWhere(function($query) {
@@ -65,7 +66,7 @@ class Schedules extends Model
                       });
             })
             ->where(function($query) use ($currentScheduleDays) {
-                // Check for day overlap
+                // Check for days that overlap to query the result of conflict schedule
                 $query->where(function($subQuery) use ($currentScheduleDays) {
                     foreach ($currentScheduleDays as $day) {
                         $subQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
@@ -78,12 +79,12 @@ class Schedules extends Model
     public function calculateAndUpdateTeacherHours() {
         $startTime = \Carbon\Carbon::parse($this->startTime);
         $endTime = \Carbon\Carbon::parse($this->endTime);
-        $duration = $startTime->diffInHours($endTime, true); // Use absolute difference
+        $duration = $startTime->diffInHours($endTime, true);
 
-        // Find the teacher and update their total loaded hours
+        // Find the teacher and update their total loaded hours based on the schedule provided
         $teacher = $this->teacher;
         if ($teacher) {
-            $teacher->numberHours = max(0, $teacher->numberHours + $duration); // Prevent negative hours
+            $teacher->numberHours = max(0, $teacher->numberHours + $duration); // Preventing negative hours
             $teacher->save(); // Save the updated hours
         }
     }

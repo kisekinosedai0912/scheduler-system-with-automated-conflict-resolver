@@ -4,7 +4,6 @@
 
     @section('styles')
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.css" />
-        {{-- <link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' rel='stylesheet' /> --}}
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -26,6 +25,7 @@
                 <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button>
             </div>
     </div>
+
     <!-- Modal -->
     <div class="modal fade" id="calendar-events" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -38,6 +38,7 @@
                     <input type="text" name="eventTitle" id="event-title" placeholder="Event Title:" class="form-control p-2 w-full">
                     <span class="text-red-600" id="titleError"></span>
                     <div class="grid grid-cols-2 gap-2 mt-3">
+
                         {{-- Start date input --}}
                         <div class="containers">
                             <label for="start-date" class="font-medium">Start Date:</label>
@@ -72,6 +73,7 @@
             </div>
         </div>
     </div>
+
     {{-- Event details modal --}}
     <div class="modal fade" id="event-details" tabindex="-1" aria-labelledby="eventDetailsLabel">
         <div class="modal-dialog">
@@ -128,6 +130,7 @@
                 $('#calendar-events').on('hidden.bs.modal', function () {
                     $('#save-btn').unbind();
                 });
+
                 // Full calendar modification functionalities
                 $('#calendar').fullCalendar({
                     header: {
@@ -135,6 +138,7 @@
                         center: 'title',
                         right: 'month,agendaWeek,agendaDay'
                     },
+
                     // Call the events and stack them
                     events,
                     editable: true,
@@ -212,6 +216,7 @@
                             });
                         });
                     },
+
                     // Function to show the modal about the events
                     eventClick: function(event) {
                         let eventId = event.id;
@@ -232,6 +237,7 @@
                         $('#delete-btn').off('click').on('click', function() {
                             confirmDeletion(event, eventId, url);
                         });
+
                         // Function to confirm before deletion of event
                         function confirmDeletion(event, eventId, url) {
                             Swal.fire({
@@ -273,6 +279,7 @@
                             });
                         }
                     },
+
                     // Function for the resizing of calendar based on the screen
                     eventResize: function(event) {
                         let eventId = event.id;
@@ -300,6 +307,7 @@
                             }
                         });
                     },
+
                     // Function for event drag and drop
                     eventDrop(event) {
                         const eventId = event.id;
@@ -336,6 +344,7 @@
                         });
                     },
                 });
+
                 // Fetching searched events on the search input
                 $('#search-event').on('input', function() {
                     let searchTerm = $(this).val().toLowerCase();
@@ -344,6 +353,7 @@
                     $('#calendar').fullCalendar('removeEventSources');
                     $('#calendar').fullCalendar('addEventSource', filteredEvents);
                 });
+
                 // Function to export calendar data in excel file
                 $('#print-button').on('click', function() {
                     if (events.length === 0) {

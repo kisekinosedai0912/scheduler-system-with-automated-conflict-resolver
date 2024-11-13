@@ -12,6 +12,7 @@
             </svg>
             <input type="search" name="searchSubject" id="search-subject" placeholder="search subject" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 focus:outline-none focus:border-[#223a5e] transition duration-300" value="{{ request('searchSubject') }}">
         </form>
+
         {{-- Add button with modal trigger --}}
         <div class="buttons flex items-center justify-end">
             <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
@@ -23,7 +24,8 @@
                 </svg>
             </button>
         </div>
-        <!-- subject modal -->
+
+        <!-- Subject modal -->
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -31,6 +33,7 @@
                     <div class="modal-header text-center bg-[#223a5e]">
                         <h1 class="modal-title fs-5 text-center text-neutral-100" id="staticBackdropLabel">Add New Subject</h1>
                     </div>
+
                     {{-- Modal body --}}
                     <div class="modal-body">
 						<div class="inputs">
@@ -52,7 +55,7 @@
                                 <div class="mb-3">
                                     <textarea name="description" id="description" placeholder="Description.." class="form-control col-span-2 w-full mt-4 pl-2 rounded-md bg-stone-200 scroll-py-1.5"></textarea>
                                 </div>
-                                
+
                                 {{-- Modal buttons --}}
                                 <div class="modal-button flex items-center justify-end gap-2 mt-3">
                                     <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
@@ -68,6 +71,7 @@
     </div>
 
     <hr class="my-2">
+
     {{-- Subject Table --}}
     <span class="hidden md:block">
         <table class="table table-hover cursor-pointer border border-slate-950">
@@ -101,11 +105,13 @@
                 @endforeach
             </tbody>
         </table>
+
          <!-- Pagination Links -->
         <div class="mt-4">
             {{ $paginateSubjects->links() }}
         </div>
     </span>
+
     {{-- Subject table for mobile --}}
     <span class="block md:hidden">
         <table class="table table-hover cursor-pointer border border-slate-950">
@@ -148,7 +154,8 @@
                 @endforeach
             </tbody>
         </table>
-        <!-- Pagination Links -->
+
+        {{-- Pagination Links  --}}
         <div class="mt-2">
             {{ $paginateSubjects->links() }}
         </div>
@@ -159,22 +166,23 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
         <script>
             $(document).ready(function () {
-                $('#search-subject').on('keypress', function (e) {
-                if (e.which === 13) { 
+                $('#search-subject').on('keypress', function (e) { // Searching event listner for searches
+                if (e.which === 13) {
                         e.preventDefault();
-                        $('#subjects-search-form').submit(); 
+                        $('#subjects-search-form').submit();
                     }
                 });
-    
-                $('#search-subject').on('input', function () {
+
+                $('#search-subject').on('input', function () { // Searching event listener when the search input is empty
                     if ($(this).val().trim() === "") {
                         $('#subjects-search-form').submit();
                     }
                 });
             });
+
             function confirmDeletion(event, formId) {
-                event.preventDefault(); 
-        
+                event.preventDefault();
+
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "You won't be able to revert this!",
@@ -190,6 +198,7 @@
                 });
             }
         </script>
+
         @if(session('error'))
             <script>
                 Swal.fire({
@@ -199,6 +208,7 @@
                 });
             </script>
         @endif
+
         @if(session('success'))
             <script>
                 Swal.fire({
@@ -213,7 +223,7 @@
                 });
             </script>
         @endif
-        {{-- Validation error handling --}}
+
         @if($errors->any())
             <script>
                 Swal.fire({

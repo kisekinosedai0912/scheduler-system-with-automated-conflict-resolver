@@ -34,6 +34,7 @@ class UserController extends Controller
         return view('event-home', ['events' => $events, 'prevEventStartTime' => $prevEventStartTime]);
     }
 
+    // Function to display the schedules of the authenticated user
     public function facultySchedule() {
         $user = Auth::user();
 
@@ -41,13 +42,11 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Access denied.');
         }
 
-        // Fetch schedules for the current logged in faculty
-        $schedules = Schedules::where('teacher_id', $user->teacher_id)
+        $schedules = Schedules::where('teacher_id', $user->teacher_id) // Fetch schedules for the current logged in faculty
             ->with(['subject', 'classroom', 'teacher'])
             ->get();
 
-        // Use the model's hasConflict method in determining conflicts
-        $schedules->each(function ($schedule) {
+        $schedules->each(function ($schedule) { // Use the model's hasConflict method in determining conflicts
             $schedule->is_conflicted = $schedule->hasConflict();
         });
 
@@ -61,11 +60,11 @@ class UserController extends Controller
         ]);
     }
 
+    // Function to display the notification to the user
     public function notification() {
         $userId = auth()->id();
 
-        // Fetch notifications for the authenticated user along with the associated event
-        $notifications = Notifications::with('event')
+        $notifications = Notifications::with('event') // Fetch notifications for the authenticated user along with the associated event
         ->where('user_id', $userId)
         ->orderBy('created_at', 'desc')
         ->get();
@@ -73,11 +72,12 @@ class UserController extends Controller
         return view('notifications', ['notifications' => $notifications]);
     }
 
+    // Function to mark the notification as read or unread
     public function is_read(Request $request, $id) {
         $notification = Notifications::find($id);
 
         if ($notification) {
-            $notification->is_read = true; // Mark as read
+            $notification->is_read = true; // Mark as read, boolean value true or false
             $notification->save(); // Save the notification
             return response()->json(['success' => 'Notification marked as read']);
         }
@@ -85,6 +85,7 @@ class UserController extends Controller
         return response()->json(['error' => 'Notification not found'], 404);
     }
 
+    // Function to display the conflicted schedules for the user
     public function conflicted_schedule() {
         $user = Auth::user();
 
@@ -92,8 +93,7 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Access denied.');
         }
 
-        // Fetch schedules specifically for the current logged-in faculty user
-        $schedules = Schedules::where('teacher_id', $user->teacher_id)
+        $schedules = Schedules::where('teacher_id', $user->teacher_id) // Fetch schedules specifically for the current logged-in faculty user
             ->with(['subject', 'classroom'])
             ->get();
 
@@ -130,18 +130,16 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Access denied.');
         }
 
-        // Fetch all schedules for the logged in user
-        $schedules = Schedules::where('teacher_id', $user->teacher_id)
+        $schedules = Schedules::where('teacher_id', $user->teacher_id) // Fetch all schedules for the logged in user
             ->with(['subject', 'classroom', 'teacher'])
             ->get();
 
-        // Identify conflicted schedules using the hasConflict method defined from the model
-        $conflictedSchedules = $schedules->filter(function ($schedule) {
+        $conflictedSchedules = $schedules->filter(function ($schedule) {  // Identify conflicted schedules using the hasConflict method defined from the model
             return $schedule->hasConflict();
         });
 
-        $conflictCount = $conflictedSchedules->count();
-        $totalSchedules = $schedules->count();
+        $conflictCount = $conflictedSchedules->count(); // Count the scheds that are conflicting
+        $totalSchedules = $schedules->count(); // Count the scheds that are not conflicting
 
         return view('print-conflict-schedule', [
             'conflictedSchedules' => $conflictedSchedules,

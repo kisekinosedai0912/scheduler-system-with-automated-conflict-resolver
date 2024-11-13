@@ -21,13 +21,17 @@ require __DIR__.'/auth.php';
 
 // Routes for users
 Route::middleware(['auth', 'userMiddleware'])->group(function () {
+    // Route to display the calendar of events in the user page
     Route::get('/event/home', [UserController::class, 'userIndex'])->name('event-calendar');
 
+    // Route to display the schedule of the authenticated user
     Route::get('/faculty/schedule', [UserController::class, 'facultySchedule'])->name('schedule');
 
+    // Route to display the notifications created by the admin in the calendar of events
     Route::get('/faculty/notifications-announcements', [UserController::class, 'notification'])->name('notification');
     Route::post('/faculty/notifications/marked-read/{id}', [UserController::class, 'is_read'])->name('read');
 
+    // Route to display the conflicted schedule of the authenticated user and also prrint those conflicted schedules
     Route::get('/faculty/conflicted-schedules', [UserController::class, 'conflicted_schedule'])->name('conflicted_schedule');
     Route::get('/faculty/print-conflicted-schedules', [UserController::class, 'printConflictedSchedules'])->name('print_conflicted_schedules');
 });
@@ -41,12 +45,14 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::delete('/admin/{eventId}/delete-event', [AdminController::class, 'deleteEvent'])->name('admin.deleteEvent');
     Route::patch('/admin/{eventId}/drag-drop', [AdminController::class, 'dragEvent'])->name('admin.dragEvent');
 
+
     // Route for schedules page
     Route::get('/admin/dashboard/schedules', [AdminController::class, 'schedules'])->name('admin.schedules');
     Route::post('/admin/dashboard/schedules/create-schedule', [AdminController::class, 'createSchedule'])->name('admin.createSchedule');
     Route::get('/admin/dashboard/{schedules}/edit-schedule', [AdminController::class, 'editSchedule'])->name('admin.editSchedule');
     Route::put('/admin/dashboard/{schedules}/update-schedule', [AdminController::class, 'updateSchedule'])->name('admin.updateSchedule');
     Route::delete('/admin/dashboard/{schedulest}/delete-schedule', [AdminController::class, 'deleteSchedule'])->name('admin.deleteSchedule');
+
 
     // Routes for the subject page
     Route::get('/admin/dashboard/subjects', [AdminController::class, 'subjects'])->name('admin.subjects');
@@ -55,13 +61,14 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::put('/admin/dashboard/{subject}/update', [AdminController::class, 'updateSubject'])->name('admin.updateSubject');
     Route::delete('/admin/dashboard/{subject}/delete', [AdminController::class, 'deleteSubject'])->name('admin.deleteSubject');
 
+
     // Routes for the teachers page
     Route::get('/admin/dashboard/teachers', [AdminController::class, 'teacher'])->name('admin.teacher');
     Route::post('/admin/dashboard/teachers/create-load', [AdminController::class, 'createLoad'])->name('admin.createLoad');
-    //Route::get('/admin/dashboard/create-load/{categoryId}', [AdminController::class, 'getCategory'])->name('admin.category');
     Route::get('/admin/dashboard/{load}/edit-load', [AdminController::class, 'editLoad'])->name('admin.editLoad');
     Route::put('/admin/dashboard/{load}/update-load', [AdminController::class, 'updateLoad'])->name('admin.updateLoad');
     Route::delete('/admin/dashboard/{load}/delete-load', [AdminController::class, 'deleteLoad'])->name('admin.deleteLoad');
+
 
     // Routes for the classroom page
     Route::get('/admin/dashboard/classroom', [AdminController::class, 'classroom'])->name('admin.classroom');
@@ -70,6 +77,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::put('/admin/dashboard/{classroom}/update-room', [AdminController::class, 'updateRoom'])->name('admin.updateRoom');
     Route::delete('/admin/dashboard/{classroom}/delete-room', [AdminController::class, 'deleteRoom'])->name('admin.deleteRoom');
 
+
     // Routes for the users page
     Route::get('/admin/dashboard/users', [AdminController::class, 'accounts'])->name('admin.users');
     Route::post('/admin/create_user', [NewRegistrationController::class, 'store_user'])->name('auth.store_user');
@@ -77,6 +85,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::patch('/admin/{user}/update-user', [AdminController::class, 'update_user'])->name('admin.update_user');
     Route::delete('/admin/{user}/delete-user', [AdminController::class, 'delete_user'])->name('admin.delete_user');
 });
+
 
 // API route for dynamic filtering of subjects based on the category selection
 Route::group(['prefix' => 'api', 'as' => 'api.'], function () {

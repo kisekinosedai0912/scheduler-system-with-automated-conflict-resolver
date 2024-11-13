@@ -45,7 +45,7 @@
                             @csrf
                             @method('post')
 
-                            <!-- Full-width dropdowns -->
+                            <!-- Dropdown selections -->
                             <select name="teacher_id" id="teacher_id" class="form-control col-span-1">
                                 <option value="">Select Teacher</option>
                                 @foreach($teachers->unique('teacherName') as $teacher)
@@ -68,7 +68,7 @@
                                 <option value="F">Friday</option>
                             </select>
 
-                            <!-- Two-column grid for the rest -->
+                            <!-- Two-column grid for the small elements -->
                             <div class="grid grid-cols-2 gap-4 col-span-1">
                                 <select name="subject_id" id="subject_id" class="form-control">
                                     <option value="">Select Subject</option>
