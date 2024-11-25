@@ -11,12 +11,13 @@ class Subjects extends Model
     protected $table = 'subjects';
 
     protected $fillable = [
+        'semester',
         'category',
         'subjectName',
         'description'
     ];
 
-    public $timestamps = false; 
+    public $timestamps = false;
 
-    
+
 }

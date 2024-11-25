@@ -14,6 +14,7 @@ class Schedules extends Model
 
     protected $fillable = [
         'teacher_id',
+        'semester',
         'categoryName',
         'subject_id',
         'studentNum',

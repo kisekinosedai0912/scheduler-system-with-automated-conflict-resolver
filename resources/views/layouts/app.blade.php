@@ -29,7 +29,7 @@
                     <span>
                         <img src="{{ URL('images/schsLogo.jfif') }}" alt="SCHS logo" width="70" height="70">
                     </span>
-                    <h1 class="font-bold md:text-2xl font-open text-neutral-100">Sagay City National High School - Stand Alone</h1>
+                    <h1 class="font-bold md:text-2xl font-open text-neutral-100">Sagay City Senior High School</h1>
                 </div>
                 <div class="flex items-center space-x-4">
                     {{-- <div class="relative inline-block">

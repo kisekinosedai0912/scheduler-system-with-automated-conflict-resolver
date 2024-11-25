@@ -6,6 +6,7 @@ use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Events\CalendarEventsController;
 use App\Http\Controllers\Auth\NewRegistrationController;
+use App\Http\Controllers\Admin\ConflictController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -47,11 +48,11 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
 
 
     // Route for schedules page
-    Route::get('/admin/dashboard/schedules', [AdminController::class, 'schedules'])->name('admin.schedules');
-    Route::post('/admin/dashboard/schedules/create-schedule', [AdminController::class, 'createSchedule'])->name('admin.createSchedule');
-    Route::get('/admin/dashboard/{schedules}/edit-schedule', [AdminController::class, 'editSchedule'])->name('admin.editSchedule');
-    Route::put('/admin/dashboard/{schedules}/update-schedule', [AdminController::class, 'updateSchedule'])->name('admin.updateSchedule');
-    Route::delete('/admin/dashboard/{schedulest}/delete-schedule', [AdminController::class, 'deleteSchedule'])->name('admin.deleteSchedule');
+    Route::get('/admin/dashboard/schedules', [ConflictController::class, 'schedules'])->name('admin.schedules');
+    Route::post('/admin/dashboard/schedules/create-schedule', [ConflictController::class, 'createSchedule'])->name('admin.createSchedule');
+    Route::get('/admin/dashboard/{schedules}/edit-schedule', [ConflictController::class, 'editSchedule'])->name('admin.editSchedule');
+    Route::put('/admin/dashboard/{schedules}/update-schedule', [ConflictController::class, 'updateSchedule'])->name('admin.updateSchedule');
+    Route::delete('/admin/dashboard/{schedulest}/delete-schedule', [ConflictController::class, 'deleteSchedule'])->name('admin.deleteSchedule');
 
 
     // Routes for the subject page

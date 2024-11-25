@@ -42,6 +42,14 @@
                                 @method('post')
 
                                 <div class="mb-3">
+                                    <select name="semester" id="semester" class="form-control col-span-2 w-full p-2 rounded-md">
+                                        <option disabled selected value="">Semester</option>
+                                        <option value="1st semester">1st semester</option>
+                                        <option value="2nd semester">2nd Semester</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
                                     <select name="category" id="category" class="form-control col-span-2 w-full p-2 rounded-md">
                                         <option disabled selected value="">Subject Category</option>
                                         <option value="Grade-11 Subjects">Grade-11 Subjects</option>
@@ -52,6 +60,7 @@
                                 <div class="mb-3">
                                   <input type="text" class="form-control rounded-md" name="subjectName" id="subject-name" placeholder="Subject: ">
                                 </div>
+
                                 <div class="mb-3">
                                     <textarea name="description" id="description" placeholder="Description.." class="form-control col-span-2 w-full mt-4 pl-2 rounded-md bg-stone-200 scroll-py-1.5"></textarea>
                                 </div>
@@ -77,6 +86,7 @@
         <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
+                    <th scope="col">Semester</th>
                     <th scope="col">Category</th>
                     <th scope="col">Subject Name</th>
                     <th scope="col">Subject Description</th>
@@ -86,6 +96,7 @@
             <tbody>
                 @foreach ($paginateSubjects as $subject)
                     <tr>
+                        <td class="text-md font-light">{{ $subject->semester }}</td>
                         <td class="text-md font-light">{{ $subject->category }}</td>
                         <td class="text-md font-light">{{ $subject->subjectName }}</td>
                         <td class="text-md font-light">{{ $subject->description }}</td>
@@ -117,6 +128,7 @@
         <table class="table table-hover cursor-pointer border border-slate-950">
             <thead>
                 <tr>
+                    <th scope="col">Semster</th>
                     <th scope="col">Category</th>
                     <th scope="col">Subject Name</th>
                     <th scope="col">Subject Description</th>
@@ -126,6 +138,7 @@
             <tbody>
                 @foreach ($paginateSubjects as $subject)
                     <tr>
+                        <td class="text-md font-light">{{ $subject->semester }}</td>
                         <td class="text-md font-light">{{ $subject->category }}</td>
                         <td class="text-md font-light">{{ $subject->subjectName }}</td>
                         <td class="text-md font-light">{{ $subject->description }}</td>

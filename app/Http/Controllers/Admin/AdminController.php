@@ -128,189 +128,6 @@ class AdminController extends Controller
         return response()->json(['message' => 'Event deleted successfully!']); // Return a json response after successful deletion with a success emssage
     }
 
-    // Function for returning view in the schedule page of the admin dashboard
-    public function schedules() {
-        $schedules = Schedules::with(['teacher', 'subject', 'classroom'])->withTrashed()->get();
-
-        // Set is_conflicted attribute for each schedule
-        foreach ($schedules as $schedule) {
-            $schedule->is_conflicted = $schedule->hasConflict();
-            \Log::info("Schedule ID: {$schedule->id}, Is Conflicted: {$schedule->is_conflicted}");
-        }
-
-        $teachers = Teachers::withTrashed()->get();
-        $subjects = Subjects::all();
-        $classrooms = Classroom::all();
-
-        return view('admin.schedules', compact('schedules', 'teachers', 'subjects', 'classrooms'));
-    }
-
-    // Function for editing schedules
-    public function editSchedule(Schedules $schedules) {
-        $schedules = Schedules::with(['teacher', 'subject', 'classroom'])->get();
-        $teachers = Teachers::withTrashed()->get();
-        $subjects = Subjects::all();
-        $classrooms = Classroom::all();
-
-        return view('admin.schedules', compact('schedules', 'teachers', 'subjects', 'classrooms'));
-    }
-
-    // Function for updating schedule
-    public function updateSchedule(Request $request, Schedules $schedules){
-        // Convert the start and end time into a 12-hour format and requests an update of the data with formatted times before storing in the database table
-        $request->merge([
-            'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
-            'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
-        ]);
-
-        $hasConflict = $this->checkForConflicts($request->teacher_id, $request->startTime, $request->endTime, $schedules->id);
-
-        $request->validate([
-            'teacher_id' => 'required',
-            'categoryName' => 'required',
-            'days' => 'required|array',
-            'subject_id' => 'required',
-            'studentNum' => 'required',
-            'yearSection' => 'nullable|string',
-            'room_id' => 'required',
-            'startTime' => 'required|date_format:H:i:s',
-            'endTime' => 'required|date_format:H:i:s',
-        ]);
-
-        $days = implode('-', $request->input('days', []));
-
-        try {
-            // Store the old duration to adjust teacher's hours
-            $oldStartTime = \Carbon\Carbon::parse($schedules->startTime);
-            $oldEndTime = \Carbon\Carbon::parse($schedules->endTime);
-            $oldDuration = $oldStartTime->diffInHours($oldEndTime, true);
-
-            $schedules->update([
-                'teacher_id' => $request->input('teacher_id'),
-                'categoryName' => $request->input('categoryName'),
-                'subject_id' => $request->input('subject_id'),
-                'room_id' => $request->input('room_id'),
-                'studentNum' => $request->input('studentNum'),
-                'yearSection' => $request->input('yearSection'),
-                'days' => $days,
-                'startTime' => $request->input('startTime'),
-                'endTime' => $request->input('endTime'),
-            ]);
-
-            // Calculate and update teacher's hours
-            $newStartTime = \Carbon\Carbon::parse($schedules->startTime);
-            $newEndTime = \Carbon\Carbon::parse($schedules->endTime);
-            $newDuration = $newStartTime->diffInHours($newEndTime, true);
-
-            $teacher = $schedules->teacher;
-            if ($teacher) {
-                // Adjust total hours by subtracting old duration and adding new duration
-                $teacher->numberHours = max(0, $teacher->numberHours - $oldDuration + $newDuration);
-                $teacher->save();
-            }
-
-            // Check for conflicts after creating the schedule
-            $schedules->is_conflicted = $hasConflict;
-            $schedules->save();
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
-        }
-
-        return redirect()->back()->with('success', 'Schedule updated successfully!');
-    }
-
-    // Function for creating schedules
-    public function createSchedule(Request $request) {
-        $request->merge([
-            'startTime' => Carbon::createFromFormat('h:i A', $request->startTime)->format('H:i:s'),
-            'endTime' => Carbon::createFromFormat('h:i A', $request->endTime)->format('H:i:s'),
-        ]);
-
-        $hasConflict = $this->checkForConflicts($request->teacher_id, $request->startTime, $request->endTime);
-
-        $request->validate([
-            'teacher_id' => 'required',
-            'categoryName' => 'required',
-            'days' => 'required|array',
-            'subject_id' => 'required',
-            'studentNum' => 'required|integer',
-            'yearSection' => 'nullable|string',
-            'room_id' => 'required',
-            'startTime' => 'required|date_format:H:i:s',
-            'endTime' => 'required|date_format:H:i:s',
-        ]);
-
-        $days = implode('-', $request->input('days', []));
-
-        try {
-            $schedule = Schedules::create([
-                'teacher_id' => $request->input('teacher_id'),
-                'categoryName' => $request->input('categoryName'),
-                'subject_id' => $request->input('subject_id'),
-                'room_id' => $request->input('room_id'),
-                'studentNum' => $request->input('studentNum'),
-                'yearSection' => $request->input('yearSection'),
-                'days' => $days,
-                'startTime' => $request->input('startTime'),
-                'endTime' => $request->input('endTime'),
-            ]);
-
-            $schedule->is_conflicted = $hasConflict;
-            $schedule->save();
-
-            // Calculate and update teacher's hours
-            $schedule->calculateAndUpdateTeacherHours();
-
-            return redirect()->route('admin.schedules')->with('success', 'Schedule added successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
-        }
-    }
-
-    // Function to check for schedule conflicts
-    private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null) {
-        $conflictingSchedules = Schedules::where('teacher_id', $teacherId)
-            ->where(function($query) use ($startTime, $endTime) {
-                $query->whereBetween('startTime', [$startTime, $endTime])
-                    ->orWhereBetween('endTime', [$startTime, $endTime])
-                    ->orWhere(function($query) use ($startTime, $endTime) {
-                        $query->where('startTime', '<=', $startTime)
-                              ->where('endTime', '>=', $endTime);
-                    });
-            });
-
-        if ($exceptId) {
-            $conflictingSchedules->where('id', '!=', $exceptId);
-        }
-
-        return $conflictingSchedules->exists();
-    }
-
-    // Function for deletion of schedules
-    public function deleteSchedule($id) {
-        try {
-            $schedule = Schedules::withTrashed()->findOrFail($id);
-            $teacher = $schedule->teacher;
-
-            if ($teacher) {
-                $startTime = \Carbon\Carbon::parse($schedule->startTime);
-                $endTime = \Carbon\Carbon::parse($schedule->endTime);
-                $duration = $startTime->diffInHours($endTime, true);
-
-                $teacher->numberHours = max(0, $teacher->numberHours - $duration); // Prevent negative hours
-                $teacher->save();
-            }
-
-            $schedule->forceDelete();
-
-            return redirect()->route('admin.schedules')->with('success', 'Schedule deleted successfully.');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.schedules')->with('error', 'Error occurred while deleting the record: ' . $e->getMessage());
-        }
-    }
 
     // Function for returning view in the schedule page of the admin dashboard
     public function subjects(Request $request) {
@@ -329,6 +146,7 @@ class AdminController extends Controller
     // Function for creating subjects in the database
     public function createSubject(Request $request) {
         $data = $request->validate([
+            'semester' => 'required|string',
             'category' => 'required|string',
             'subjectName' => 'required|string',
             'description' => 'nullable|string'
@@ -353,6 +171,7 @@ class AdminController extends Controller
     public function updateSubject(Request $request, Subjects $subject)
     {
         $data = $request->validate([
+            'semester' => 'required|string',
             'category' => 'required|string',
             'subjectName' => 'required|string',
             'description' => 'nullable|string',

@@ -34,6 +34,50 @@
             </button>
         </div>
 
+        <!-- Modal for Resolving Schedule Conflicts -->
+        <span class="hidden" id="resolveScheduleModal">
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50" tabindex="-1">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-lg">
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h5 class="text-lg font-semibold" id="resolveScheduleModalLabel">Resolve Schedule Conflict</h5>
+                            <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <!-- Teacher Information and Conflict Details -->
+                        <div id="teacherInfo" class="mb-4 p-3 bg-gray-100 rounded">
+                            <strong>Teacher:</strong> <span id="teacherName"></span><br>
+                            <strong>Conflicted Schedule:</strong> <span id="conflictedSchedule"></span>
+                        </div>
+
+                        <!-- Available Time Slots -->
+                        <h6 class="mb-3 font-semibold">Suggested Available Slots:</h6>
+                        <table class="min-w-full bg-white border border-gray-300">
+                            <thead>
+                                <tr class="bg-[#223a5e] text-white">
+                                <th class="py-2 px-4 border">Day</th>
+                                <th class="py-2 px-4 border">Start Time</th>
+                                <th class="py-2 px-4 border">End Time</th>
+                                <th class="py-2 px-4 border">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be inserted dynamically via JS -->
+                            </tbody>
+                        </table>
+
+                        <div class="flex justify-end mt-4">
+                            <button id="rejectBtn" class="bg-red-500 text-white px-4 py-2 rounded mr-2" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">Reject</button>
+                            <button id="acceptBtn" class="bg-green-500 text-white px-4 py-2 rounded">Accept</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </span>
+
         <div class="modal fade" id="scheduleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -50,6 +94,13 @@
                                 <option value="">Select Teacher</option>
                                 @foreach($teachers->unique('teacherName') as $teacher)
                                     <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
+                                @endforeach
+                            </select>
+
+                            <select id="semester" name="semester" class="form-control col-span-1">
+                                <option value="">Semester</option>
+                                @foreach($subjects->unique('semester') as $subject)
+                                    <option value="{{ $subject->semester }}">{{ $subject->semester }}</option>
                                 @endforeach
                             </select>
 
@@ -109,12 +160,13 @@
     <table id="schedulesTable" class="bg-white">
         <thead>
             <tr>
-                <th>Teacher Name</th>
+                <th>Teacher</th>
+                <th>Semester</th>
                 <th>Category</th>
                 <th>Subject</th>
                 <th class="text-center">Room</th>
-                <th class="text-center">No. of Student</th>
-                <th>Section/Year</th>
+                <th class="text-center">Student #</th>
+                <th>Year/Sec</th>
                 <th class="text-center">Day/s</th>
                 <th>Start Time</th>
                 <th>End Time</th>
@@ -125,6 +177,7 @@
             @foreach ($schedules as $schedule)
                 <tr style="background-color: {{ $schedule->is_conflicted ? 'rgba(255, 0, 0, 0.6)' : 'white' }};">
                     <td class="text-md font-light">{{ $schedule->teacher->teacherName }}</td>
+                    <td class="text-md font-light">{{ $schedule->semester }}</td>
                     <td class="text-md font-light">{{ $schedule->categoryName }}</td>
                     <td class="text-md font-light">{{ $schedule->subject->subjectName }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->classroom->roomName }}</td>
@@ -209,7 +262,218 @@
                     }
                 @endforeach
 
-                function confirmDeletion(event, formId) {
+
+                $('#schedules-form').on('submit', function(event) {
+                    event.preventDefault(); // Prevent the default form submission
+
+                    // Close the add schedule modal
+                    $('#scheduleModal').modal('hide');
+
+                    // Check if there's a previously stored original schedule data
+                    const originalScheduleData = $(this).serialize();
+
+                    $.ajax({
+                        url: $(this).attr('action'), // The form action URL
+                        method: 'POST',
+                        data: originalScheduleData, // Serialize the form data
+                        success: function(response) {
+                            // No conflict, redirect to the schedules page
+                            window.location.href = "{{ route('admin.schedules') }}";
+                        },
+                        error: function(xhr, status, error) {
+                            if (xhr.status === 409) { // Conflict status
+                                const response = xhr.responseJSON;
+
+                                // Store the original schedule data for potential reuse
+                                window.originalScheduleData = response.original_schedule;
+
+                                // Show the resolve schedule modal
+                                openResolveModal(response.original_schedule, response.available_slots);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred while creating the schedule.'
+                                });
+                            }
+                        }
+                    });
+                });
+
+
+                function openResolveModal(schedule, availableSlots) {
+                    // Safely get the teacher name
+                    const teacherName = schedule.teacher
+                        ? (schedule.teacher.teacherName || schedule.teacher.name || 'Unknown Teacher')
+                        : 'Unknown Teacher';
+
+                    $('#teacherName').text(teacherName);
+
+                    // Safely get the subject name
+                    const subjectName = schedule.subject
+                        ? (schedule.subject.subjectName || schedule.subject.name || 'N/A')
+                        : 'N/A';
+
+                    // Safely format days and times
+                    const days = schedule.days || 'N/A';
+                    const startTime = schedule.startTime ? formatTime(schedule.startTime) : 'N/A';
+                    const endTime = schedule.endTime ? formatTime(schedule.endTime) : 'N/A';
+
+                    $('#conflictedSchedule').text(`Semester: ${schedule.semester || 'N/A'}, Subject: ${subjectName}, Days: ${days}, Time: ${startTime} - ${endTime}`);
+
+                    let slotsTableBody = $('#resolveScheduleModal tbody');
+                    slotsTableBody.empty();
+
+                    if (availableSlots && availableSlots.length > 0) {
+                        availableSlots.forEach(slot => {
+                            const row = `
+                                <tr data-schedule-id="${schedule.id || ''}"
+                                    data-day="${slot.day}"
+                                    data-start-time="${slot.start_time}"
+                                    data-end-time="${slot.end_time}">
+                                    <td class="text-center">${getDayFullName(slot.day)}</td>
+                                    <td class="text-center">${formatTime(slot.start_time)}</td>
+                                    <td class="text-center">${formatTime(slot.end_time)}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-primary select-slot-btn">Select</button>
+                                    </td>
+                                </tr>
+                            `;
+                            slotsTableBody.append(row);
+                        });
+
+                        // Add click event for slot selection
+                        $('.select-slot-btn').on('click', function() {
+                            const row = $(this).closest('tr');
+                            const scheduleId = row.data('schedule-id');
+                            const day = row.data('day');
+                            const startTime = row.data('start-time');
+                            const endTime = row.data('end-time');
+
+                            // Highlight selected row
+                            $('#resolveScheduleModal tbody tr').removeClass('table-active');
+                            row.addClass('table-active');
+
+                            // Store selected slot details
+                            window.selectedSlot = {
+                                scheduleId: scheduleId,
+                                day: day,
+                                startTime: startTime,
+                                endTime: endTime
+                            };
+                        });
+
+                        // Show the resolve modal
+                        $('#resolveScheduleModal').removeClass('hidden');
+                    } else {
+                        // No available slots
+                        slotsTableBody.html(`
+                            <tr>
+                                <td colspan="4" class="text-center text-danger">
+                                    No alternative slots available. Please choose a different time or teacher.
+                                </td>
+                            </tr>
+                        `);
+                        $('#resolveScheduleModal').removeClass('hidden');
+                    }
+                }
+
+                $('#acceptBtn').click(function() {
+                    if (window.selectedSlot && window.originalScheduleData) {
+                        // Prepare form data with the original schedule and selected slot
+                        const formData = new FormData();
+
+                        // Add original schedule data
+                        Object.keys(window.originalScheduleData).forEach(key => {
+                            formData.append(key, window.originalScheduleData[key]);
+                        });
+
+                        // Add selected slot as a JSON string
+                        formData.append('selected_slot', JSON.stringify(window.selectedSlot));
+
+                        // Add CSRF token
+                        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                        $.ajax({
+                            url: "{{ route('admin.createSchedule') }}",
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Schedule Updated',
+                                    text: 'The schedule has been successfully rescheduled.'
+                                }).then(() => {
+                                    location.reload(); // Refresh the page
+                                });
+                            },
+                            error: function(xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Update Failed',
+                                    text: 'Unable to update the schedule. ' + error
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Slot Selected',
+                            text: 'Please select an alternative time slot.'
+                        });
+                    }
+                });
+
+                // Reject button logic
+                $('#rejectBtn').click(function() {
+                    Swal.fire({
+                        title: 'Discard Schedule?',
+                        text: 'The schedule will not be saved due to conflicts.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, discard',
+                        cancelButtonText: 'Keep Editing'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Close the modal and reset the form
+                            $('#resolveScheduleModal').addClass('hidden');
+                            $('#schedules-form')[0].reset();
+                        }
+                    });
+                });
+
+                // Helper function to get full day name
+                function getDayFullName(shortDay) {
+                    const dayMap = {
+                        'M': 'Monday',
+                        'T': 'Tuesday',
+                        'W': 'Wednesday',
+                        'TH': 'Thursday',
+                        'F': 'Friday'
+                    };
+                    return dayMap[shortDay] || shortDay;
+                }
+
+                // Helper function to get the ID of the selected slot (from the table or UI)
+                function getSelectedSlotId() {
+                    // This assumes that you will mark the selected slot somehow (e.g., adding a class to the row or button)
+                    // Implement your logic to get the selected slot's ID here.
+                    return selectedSlotId; // Replace this with your actual logic
+                }
+
+                // Helper function to format time from 24-hour to 12-hour format
+                function formatTime(time) {
+                    const [hours, minutes] = time.split(':');
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    const formattedHours = hours % 12 || 12; // Convert to 12-hour format
+                    return `${formattedHours}:${minutes} ${period}`;
+                }
+            });
+            function confirmDeletion(event, formId) {
                     event.preventDefault();
                     Swal.fire({
                         title: 'Are you sure?',
@@ -225,7 +489,6 @@
                         }
                     });
                 }
-            });
         </script>
         @if(session('error'))
             <script>
