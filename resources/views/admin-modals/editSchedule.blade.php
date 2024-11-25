@@ -22,6 +22,15 @@
                             @endforeach
                         </select>
 
+                        <select id="edit-semester-select-{{ $schedule->id }}" name="semester" class="form-control col-span-1">
+                            <option value="">Edit Semester</option>
+                            @foreach($subjects->unique('semester') as $subject)
+                                <option value="{{ $subject->semester }}" {{ $subject->semester == $schedule->semester ? 'selected' : '' }}>
+                                    {{ $subject->semester }}
+                                </option>
+                            @endforeach
+                        </select>
+
                         <select id="edit-category-select-{{ $schedule->id }}" name="categoryName" class="form-control col-span-1">
                             <option value="">Select Category</option>
                             @foreach($subjects->unique('category') as $subject)

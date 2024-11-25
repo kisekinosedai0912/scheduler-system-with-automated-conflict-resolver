@@ -34,13 +34,13 @@
             </button>
         </div>
 
-        <!-- Modal for Resolving Schedule Conflicts -->
+       <!-- Modal for Resolving Schedule Conflicts -->
         <span class="hidden" id="resolveScheduleModal">
             <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50" tabindex="-1">
                 <div class="bg-white rounded-lg shadow-lg w-full max-w-lg">
                     <div class="flex justify-between items-center p-4 border-b">
                         <h5 class="text-lg font-semibold" id="resolveScheduleModalLabel">Resolve Schedule Conflict</h5>
-                            <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">
+                        <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -55,19 +55,21 @@
 
                         <!-- Available Time Slots -->
                         <h6 class="mb-3 font-semibold">Suggested Available Slots:</h6>
-                        <table class="min-w-full bg-white border border-gray-300">
-                            <thead>
-                                <tr class="bg-[#223a5e] text-white">
-                                <th class="py-2 px-4 border">Day</th>
-                                <th class="py-2 px-4 border">Start Time</th>
-                                <th class="py-2 px-4 border">End Time</th>
-                                <th class="py-2 px-4 border">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Rows will be inserted dynamically via JS -->
-                            </tbody>
-                        </table>
+                        <div class="max-h-60 overflow-y-auto"> <!-- Added scrollable wrapper -->
+                            <table class="min-w-full bg-white border border-gray-300">
+                                <thead>
+                                    <tr class="bg-[#223a5e] text-white">
+                                        <th class="py-2 px-4 border">Day</th>
+                                        <th class="py-2 px-4 border">Start Time</th>
+                                        <th class="py-2 px-4 border">End Time</th>
+                                        <th class="py-2 px-4 border">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows will be inserted dynamically via JS -->
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div class="flex justify-end mt-4">
                             <button id="rejectBtn" class="bg-red-500 text-white px-4 py-2 rounded mr-2" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">Reject</button>
@@ -206,6 +208,7 @@
     @section('scripts')
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
         <script src="//cdn.datatables.net/2.1.6/js/dataTables.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.1.0/dist/js/multi-select-tag.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
@@ -335,32 +338,11 @@
                                     <td class="text-center">${formatTime(slot.start_time)}</td>
                                     <td class="text-center">${formatTime(slot.end_time)}</td>
                                     <td class="text-center">
-                                        <button class="btn btn-primary select-slot-btn">Select</button>
+                                        <input type="checkbox" class="select-slot-checkbox" data-day="${slot.day}" data-start-time="${slot.start_time}" data-end-time="${slot.end_time}">
                                     </td>
                                 </tr>
                             `;
                             slotsTableBody.append(row);
-                        });
-
-                        // Add click event for slot selection
-                        $('.select-slot-btn').on('click', function() {
-                            const row = $(this).closest('tr');
-                            const scheduleId = row.data('schedule-id');
-                            const day = row.data('day');
-                            const startTime = row.data('start-time');
-                            const endTime = row.data('end-time');
-
-                            // Highlight selected row
-                            $('#resolveScheduleModal tbody tr').removeClass('table-active');
-                            row.addClass('table-active');
-
-                            // Store selected slot details
-                            window.selectedSlot = {
-                                scheduleId: scheduleId,
-                                day: day,
-                                startTime: startTime,
-                                endTime: endTime
-                            };
                         });
 
                         // Show the resolve modal
@@ -379,17 +361,39 @@
                 }
 
                 $('#acceptBtn').click(function() {
-                    if (window.selectedSlot && window.originalScheduleData) {
-                        // Prepare form data with the original schedule and selected slot
+                    const selectedSlots = [];
+                    $('.select-slot-checkbox:checked').each(function() {
+                        const day = $(this).data('day');
+                        const startTime = $(this).data('start-time');
+                        const endTime = $(this).data('end-time');
+
+                        selectedSlots.push({
+                            day: day,
+                            startTime: formatTimeForServer(startTime),
+                            endTime: formatTimeForServer(endTime)
+                        });
+                    });
+
+                    if (selectedSlots.length > 0 && window.originalScheduleData) {
                         const formData = new FormData();
 
                         // Add original schedule data
                         Object.keys(window.originalScheduleData).forEach(key => {
-                            formData.append(key, window.originalScheduleData[key]);
+                            if (key === 'days') {
+                                // Use the days from the selected slots
+                                selectedSlots.forEach((slot, index) => {
+                                    formData.append(`days[${index}]`, slot.day);
+                                });
+                            } else if (key === 'startTime' || key === 'endTime') {
+                                // Format time for server
+                                formData.append(key, formatTimeForServer(window.originalScheduleData[key]));
+                            } else {
+                                formData.append(key, window.originalScheduleData[key]);
+                            }
                         });
 
-                        // Add selected slot as a JSON string
-                        formData.append('selected_slot', JSON.stringify(window.selectedSlot));
+                        // Add all selected slots as JSON
+                        formData.append('selected_slots', JSON.stringify(selectedSlots));
 
                         // Add CSRF token
                         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
@@ -401,30 +405,68 @@
                             processData: false,
                             contentType: false,
                             success: function(response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Schedule Updated',
-                                    text: 'The schedule has been successfully rescheduled.'
-                                }).then(() => {
-                                    location.reload(); // Refresh the page
-                                });
+                                // Redirect to schedules page on successful creation
+                                window.location.href = "{{ route('admin.schedules') }}";
                             },
                             error: function(xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Update Failed',
-                                    text: 'Unable to update the schedule. ' + error
-                                });
+                                if (xhr.status === 409) { // Conflict status
+                                    const response = xhr.responseJSON;
+
+                                    // Show available slots modal again if there are conflicts
+                                    if (response.status === 'conflict') {
+                                        openResolveModal(response.original_schedule, response.available_slots);
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Conflict Error',
+                                            text: response.message || 'An unresolved conflict occurred.'
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'An unexpected error occurred.'
+                                    });
+                                }
                             }
                         });
                     } else {
                         Swal.fire({
                             icon: 'warning',
                             title: 'No Slot Selected',
-                            text: 'Please select an alternative time slot.'
+                            text: 'Please select at least one alternative time slot.'
                         });
                     }
                 });
+
+
+                function formatTimeForServer(time) {
+                    // Check if time is already in 24-hour format
+                    if (/^\d{2}:\d{2}$/.test(time)) {
+                        return time;
+                    }
+
+                    // Try parsing with multiple formats
+                    const formats = [
+                        'h:mm A',   // 12-hour format with AM/PM
+                        'H:mm',     // 24-hour format
+                        'hh:mm A',  // Padded 12-hour format
+                        'HH:mm'     // Padded 24-hour format
+                    ];
+
+                    // Try parsing the time
+                    const parsedTime = moment(time, formats);
+
+                    // Check if parsing was successful
+                    if (parsedTime.isValid()) {
+                        return parsedTime.format('HH:mm');
+                    }
+
+                    // Fallback or error handling
+                    console.error('Unable to parse time:', time);
+                    return time; // Return original time if parsing fails
+                }
 
                 // Reject button logic
                 $('#rejectBtn').click(function() {
