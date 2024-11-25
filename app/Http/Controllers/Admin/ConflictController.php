@@ -339,9 +339,24 @@ class ConflictController extends Controller
 
         foreach ($days as $day) {
             foreach ($timeSlots as $slot) {
-                // Check if the teacher is already booked in this time slot
-                if (!$this->checkForConflicts($teacherId, $slot['start_time'], $slot['end_time'])) {
-                    // If the slot is available, add it to the available slots array
+                // Check for conflicts specific to this day and time slot
+                $hasConflict = Schedules::where('teacher_id', $teacherId)
+                    ->where(function($query) use ($slot, $day) {
+                        $query->where(function($q) use ($slot, $day) {
+                            // Check if the new time slot overlaps with existing schedules on this specific day
+                            $q->whereBetween('startTime', [$slot['start_time'], $slot['end_time']])
+                            ->orWhereBetween('endTime', [$slot['start_time'], $slot['end_time']])
+                            ->orWhere(function($q) use ($slot) {
+                                $q->where('startTime', '<=', $slot['start_time'])
+                                    ->where('endTime', '>=', $slot['end_time']);
+                            });
+                        })
+                        ->whereRaw("FIND_IN_SET(?, days) > 0", [$day]);
+                    })
+                    ->exists();
+
+                // If no conflict is found for this specific day and time slot, add it to available slots
+                if (!$hasConflict) {
                     $availableSlots[] = [
                         'day' => $day,
                         'start_time' => $slot['start_time'],
