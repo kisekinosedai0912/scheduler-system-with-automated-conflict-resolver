@@ -22,7 +22,7 @@ class ConflictController extends Controller
         // Set is_conflicted attribute for each schedule
         foreach ($schedules as $schedule) {
             $schedule->is_conflicted = $schedule->hasConflict();
-            \Log::info("Schedule ID: {$schedule->id}, Is Conflicted: {$schedule->is_conflicted}");
+            // \Log::info("Schedule ID: {$schedule->id}, Is Conflicted: {$schedule->is_conflicted}");
         }
 
         $teachers = Teachers::withTrashed()->get();
@@ -45,7 +45,6 @@ class ConflictController extends Controller
     // Function for updating schedule
     public function updateSchedule(Request $request, Schedules $schedules){
         try {
-            // Handle time parsing more robustly
             $startTime = $request->input('startTime');
             $endTime = $request->input('endTime');
 
@@ -75,7 +74,7 @@ class ConflictController extends Controller
 
             $days = implode('-', $request->input('days', []));
 
-            // Store the old duration to adjust teacher's hours
+            // Storing the old duration to adjust teacher's hours
             $oldStartTime = \Carbon\Carbon::parse($schedules->startTime);
             $oldEndTime = \Carbon\Carbon::parse($schedules->endTime);
             $oldDuration = $oldStartTime->diffInHours($oldEndTime, true);
@@ -124,7 +123,7 @@ class ConflictController extends Controller
 
     // Function for creating schedules
     public function createSchedule(Request $request) {
-        // Debug: Log the incoming request data
+        // For Debugging: Loggin the incoming request data
         \Log::info('Create Schedule Request Data', $request->all());
 
         try {
@@ -140,7 +139,7 @@ class ConflictController extends Controller
                 throw new \Exception("The days field must be an array.");
             }
 
-            // Normalize days array (trim and remove empty values)
+            // Normalize days array (trim and remove spaces & empty values)
             $days = array_filter(array_map('trim', $days));
 
             $startTime = $request->input('startTime');
@@ -154,7 +153,7 @@ class ConflictController extends Controller
                     // Extract days from selected slots
                     $days = array_column($selectedSlots, 'day');
 
-                    // Use the first slot's time (assuming all slots have the same duration)
+                    // Use the first slot's time
                     $startTime = $selectedSlots[0]['startTime'];
                     $endTime = $selectedSlots[0]['endTime'];
 
@@ -196,10 +195,10 @@ class ConflictController extends Controller
                 'endTime' => 'required|date_format:H:i:s',
             ]);
 
-            // Convert days array to hyphen-separated string for database storage
+            // Convert days array to be seperated by a hyphen/dash when storing in the database
             $daysString = implode('-', $days);
 
-            // Check for conflicts
+            // Check for conflicts using the checkForConflicts method
             $hasConflict = $this->checkForConflicts($request->teacher_id, $parsedStartTime, $parsedEndTime, null, $daysString);
 
             // If there's a conflict and no selected slot, return conflict response
@@ -246,19 +245,18 @@ class ConflictController extends Controller
                     'room_id' => $request->input('room_id'),
                     'studentNum' => $request->input('studentNum'),
                     'yearSection' => $request->input('yearSection'),
-                    'days' => $daysString, // Store the combined days
+                    'days' => $daysString,
                     'startTime' => $parsedStartTime,
                     'endTime' => $parsedEndTime,
                 ]);
 
-                // Log the created schedule for debugging
-                \Log::info('Schedule created', [
-                    'schedule_id' => $schedule->id,
-                    'teacher_id' => $schedule->teacher_id,
-                    'days' => $schedule->days,
-                    'startTime' => $schedule->startTime,
-                    'endTime' => $schedule->endTime,
-                ]);
+                // \Log::info('Schedule created', [
+                //     'schedule_id' => $schedule->id,
+                //     'teacher_id' => $schedule->teacher_id,
+                //     'days' => $schedule->days,
+                //     'startTime' => $schedule->startTime,
+                //     'endTime' => $schedule->endTime,
+                // ]);
 
                 // Calculate and update teacher's hours
                 $schedule->calculateAndUpdateTeacherHours();
@@ -415,18 +413,64 @@ class ConflictController extends Controller
     }
 
     // Existing conflict check function, which you already have in place
+    // private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null)
+    // {
+    //     // Start building the query
+    //     $conflictingSchedules = Schedules::where('teacher_id', $teacherId)
+    //         ->where(function($query) use ($startTime, $endTime) {
+    //             $query->whereBetween('startTime', [$startTime, $endTime])
+    //                 ->orWhereBetween('endTime', [$startTime, $endTime])
+    //                 ->orWhere(function($query) use ($startTime, $endTime) {
+    //                     $query->where('startTime', '<=', $startTime)
+    //                             ->where('endTime', '>=', $endTime);
+    //                 });
+    //         });
+
+    //     // Exclude the current schedule if provided
+    //     if ($exceptId) {
+    //         $conflictingSchedules->where('id', '!=', $exceptId);
+    //     }
+
+    //     // Get the conflicting schedules
+    //     $conflicts = $conflictingSchedules->get();
+
+    //     // If no specific days are provided, return false if there are no conflicts
+    //     if (is_null($days)) {
+    //         return $conflicts->isNotEmpty();
+    //     }
+
+    //     // Split the provided days into an array
+    //     $newScheduleDays = explode('-', $days);
+
+    //     // Check if any of the conflicting schedules occur on the same day
+    //     foreach ($conflicts as $conflict) {
+    //         $conflictDays = explode('-', $conflict->days);
+
+    //         // Check for day conflicts
+    //         foreach ($newScheduleDays as $newDay) {
+    //             if (in_array($newDay, $conflictDays)) {
+    //                 return true; // Conflict found
+    //             }
+    //         }
+    //     }
+
+    //     return false; // No conflict found
+    // }
+
+
+
+
     private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null)
     {
         // Start building the query
-        $conflictingSchedules = Schedules::where('teacher_id', $teacherId)
-            ->where(function($query) use ($startTime, $endTime) {
-                $query->whereBetween('startTime', [$startTime, $endTime])
-                    ->orWhereBetween('endTime', [$startTime, $endTime])
-                    ->orWhere(function($query) use ($startTime, $endTime) {
-                        $query->where('startTime', '<=', $startTime)
-                                ->where('endTime', '>=', $endTime);
-                    });
-            });
+        $conflictingSchedules = Schedules::where(function($query) use ($startTime, $endTime) {
+            $query->whereBetween('startTime', [$startTime, $endTime])
+                ->orWhereBetween('endTime', [$startTime, $endTime])
+                ->orWhere(function($query) use ($startTime, $endTime) {
+                    $query->where('startTime', '<=', $startTime)
+                            ->where('endTime', '>=', $endTime);
+                });
+        });
 
         // Exclude the current schedule if provided
         if ($exceptId) {

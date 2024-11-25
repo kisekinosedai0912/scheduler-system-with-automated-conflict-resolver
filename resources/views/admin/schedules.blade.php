@@ -10,7 +10,8 @@
 
     <div class="outer-container flex flex-col md:flex-row items-center justify-end">
         <div class="buttons flex items-center justify-end gap-2 w-80">
-            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-2 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active">
+            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active">
+                <span class="font-medium">Print</span>
                 <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
                     viewBox="0 0 24 24"
                     height="40"
@@ -39,7 +40,10 @@
             <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50" tabindex="-1">
                 <div class="bg-white rounded-lg shadow-lg w-full max-w-lg">
                     <div class="flex justify-between items-center p-4 border-b">
-                        <h5 class="text-lg font-semibold" id="resolveScheduleModalLabel">Resolve Schedule Conflict</h5>
+                        <div class="flex flex-col">
+                            <h5 class="text-lg font-semibold" id="resolveScheduleModalLabel">Resolve Schedule Conflict</h5>
+                            <p class="text-sm">There is already a schedule asigned for this specific time and day. You can choose from any these free schedules.</p>
+                        </div>
                         <button type="button" class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('resolveScheduleModal').classList.add('hidden')">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -267,20 +271,20 @@
 
 
                 $('#schedules-form').on('submit', function(event) {
-                    event.preventDefault(); // Prevent the default form submission
+                    event.preventDefault();
 
                     // Close the add schedule modal
                     $('#scheduleModal').modal('hide');
 
                     // Check if there's a previously stored original schedule data
-                    const originalScheduleData = $(this).serialize();
+                    const originalScheduleData = $(this).serialize(); // serializing the stored data before sending to the backend
 
                     $.ajax({
-                        url: $(this).attr('action'), // The form action URL
+                        url: $(this).attr('action'), // Directly base from the action attribute in the schedule form submission
                         method: 'POST',
-                        data: originalScheduleData, // Serialize the form data
+                        data: originalScheduleData, // Passing the serialized data collected from the form submission
                         success: function(response) {
-                            // No conflict, redirect to the schedules page
+                            // If there is no conflict, redirect to the schedules page
                             window.location.href = "{{ route('admin.schedules') }}";
                         },
                         error: function(xhr, status, error) {
@@ -290,7 +294,7 @@
                                 // Store the original schedule data for potential reuse
                                 window.originalScheduleData = response.original_schedule;
 
-                                // Show the resolve schedule modal
+                                // Show the resolve schedule modal and display the available schedules
                                 openResolveModal(response.original_schedule, response.available_slots);
                             } else {
                                 Swal.fire({
@@ -305,19 +309,19 @@
 
 
                 function openResolveModal(schedule, availableSlots) {
-                    // Safely get the teacher name
+                    // Get the teacher name from the relationship and provide a default value if not provided
                     const teacherName = schedule.teacher
                         ? (schedule.teacher.teacherName || schedule.teacher.name || 'Unknown Teacher')
                         : 'Unknown Teacher';
 
                     $('#teacherName').text(teacherName);
 
-                    // Safely get the subject name
+                    // Same thing to the subject
                     const subjectName = schedule.subject
                         ? (schedule.subject.subjectName || schedule.subject.name || 'N/A')
                         : 'N/A';
 
-                    // Safely format days and times
+                    // And also in the days and format the time
                     const days = schedule.days || 'N/A';
                     const startTime = schedule.startTime ? formatTime(schedule.startTime) : 'N/A';
                     const endTime = schedule.endTime ? formatTime(schedule.endTime) : 'N/A';
@@ -345,10 +349,9 @@
                             slotsTableBody.append(row);
                         });
 
-                        // Show the resolve modal
                         $('#resolveScheduleModal').removeClass('hidden');
                     } else {
-                        // No available slots
+                        // If there are no available slots, display this
                         slotsTableBody.html(`
                             <tr>
                                 <td colspan="4" class="text-center text-danger">
@@ -377,7 +380,7 @@
                     if (selectedSlots.length > 0 && window.originalScheduleData) {
                         const formData = new FormData();
 
-                        // Add original schedule data
+                        // Add the original schedule data
                         Object.keys(window.originalScheduleData).forEach(key => {
                             if (key === 'days') {
                                 // Use the days from the selected slots
@@ -395,7 +398,7 @@
                         // Add all selected slots as JSON
                         formData.append('selected_slots', JSON.stringify(selectedSlots));
 
-                        // Add CSRF token
+                        // Add the CSRF token for the request security
                         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
 
                         $.ajax({
@@ -455,7 +458,7 @@
                         'HH:mm'     // Padded 24-hour format
                     ];
 
-                    // Try parsing the time
+                    // Try parsing the time using moment.js library
                     const parsedTime = moment(time, formats);
 
                     // Check if parsing was successful
@@ -502,9 +505,7 @@
 
                 // Helper function to get the ID of the selected slot (from the table or UI)
                 function getSelectedSlotId() {
-                    // This assumes that you will mark the selected slot somehow (e.g., adding a class to the row or button)
-                    // Implement your logic to get the selected slot's ID here.
-                    return selectedSlotId; // Replace this with your actual logic
+                    return selectedSlotId;
                 }
 
                 // Helper function to format time from 24-hour to 12-hour format
