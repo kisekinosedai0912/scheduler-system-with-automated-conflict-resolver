@@ -17,8 +17,9 @@ class Schedules extends Model
         'semester',
         'categoryName',
         'subject_id',
-        'studentNum',
-        'yearSection',
+        // 'studentNum',
+        'year',
+        'section',
         'days',
         'room_id',
         'startTime',
@@ -43,13 +44,13 @@ class Schedules extends Model
     // Private function exclusive only to the schedules model, this function will handle the checking of the conflicted schedules
     public function hasConflict() {
         // Debugging statement in case of errors
-        \Log::info('Checking conflicts for schedule', [
-            'schedule_id' => $this->id,
-            'teacher_id' => $this->teacher_id,
-            'days' => $this->days,
-            'startTime' => $this->startTime,
-            'endTime' => $this->endTime
-        ]);
+        // \Log::info('Checking conflicts for schedule', [
+        //     'schedule_id' => $this->id,
+        //     'teacher_id' => $this->teacher_id,
+        //     'days' => $this->days,
+        //     'startTime' => $this->startTime,
+        //     'endTime' => $this->endTime
+        // ]);
 
         // Split the days of the current schedule and convert to array
         $currentScheduleDays = explode('-', $this->days);

@@ -1,39 +1,74 @@
 @foreach ($paginateLoads as $teacher)
     <div class="modal fade" id="editTeacher-{{ $teacher->id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editModalLabel-{{ $teacher->id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-lg shadow-xl border-none">
                 {{-- Modal header --}}
-                <div class="modal-header text-center bg-[#223a5e]">
-                    <h1 class="modal-title fs-5 text-center text-neutral-100" id="editModalLabel-{{ $teacher->id }}">Edit Load</h1>
+                <div class="modal-header bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white p-4 rounded-t-lg">
+                    <h1 class="modal-title text-xl font-semibold" id="editModalLabel-{{ $teacher->id }}">Edit Load</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
                 </div>
+
                 {{-- Modal body --}}
-                <div class="modal-body">
-                    <form action="{{ route('admin.updateLoad', $teacher->id) }}" method="post" name="teachersForm" id="teachers-form">
+                <div class="modal-body p-6">
+                    <form action="{{ route('admin.updateLoad', $teacher->id) }}" method="post" name="teachersForm" id="teachers-form" class="space-y-4">
                         @csrf
                         @method('put')
 
-                        {{-- Display Current Teacher Name --}}
-                        <div class="mb-3">
-                            <input type="text" name="teacherName" id="teacher-name-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->teacherName }}" required>
+                        <div>
+                            <label for="teacher-name-{{ $teacher->id }}" class="block mb-2 font-medium">Teacher's Name</label>
+                            <input type="text"
+                                name="teacherName"
+                                id="teacher-name-{{ $teacher->id }}"
+                                class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                value="{{ $teacher->teacherName }}"
+                                placeholder="Enter teacher's full name"
+                                required>
                         </div>
 
-                        <div class="mb-3">
-                            <input type="email" id="email-{{ $teacher->id }}" name="email" class="form-control" placeholder="Email" value="{{ $teacher->email }}" required />
+                        <div>
+                            <label for="email-{{ $teacher->id }}" class="block mb-2 font-medium">Email Address</label>
+                            <input type="email"
+                                id="email-{{ $teacher->id }}"
+                                name="email"
+                                class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                value="{{ $teacher->email }}"
+                                placeholder="Enter email address"
+                                required>
                         </div>
 
-                        <div class="mb-3">
-                            <input type="text" id="contact-{{ $teacher->id }}" name="contact" class="form-control" placeholder="Contact Number" value="{{ $teacher->contact }}" required />
+                        <div>
+                            <label for="contact-{{ $teacher->id }}" class="block mb-2 font-medium">Contact Number</label>
+                            <input type="tel"
+                                id="contact-{{ $teacher->id }}"
+                                name="contact"
+                                class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                value="{{ $teacher->contact }}"
+                                placeholder="Enter contact number"
+                                required>
                         </div>
 
-                        {{-- Display Current Total Load Hours --}}
-                        <div class="mb-3">
-                            <input type="text" name="numberHours" id="number-hours-{{ $teacher->id }}" class="form-control col-span-2 w-full p-2 rounded-md" value="{{ $teacher->numberHours }}" required>
+                        <div>
+                            <label for="number-hours-{{ $teacher->id }}" class="block mb-2 font-medium">Total Load Hours</label>
+                            <input type="text"
+                                name="numberHours"
+                                id="number-hours-{{ $teacher->id }}"
+                                class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                value="{{ $teacher->numberHours }}"
+                                placeholder="Enter total load hours"
+                                readonly>
                         </div>
 
                         {{-- Modal buttons --}}
-                        <div class="modal-button flex items-center justify-end gap-2 mt-3">
-                            <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Update Load</button>
+                        <div class="flex justify-end gap-4 mt-6">
+                            <button type="button"
+                                class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg transition duration-300 hover:bg-[#223a5e] hover:text-white"
+                                data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg transition duration-300 hover:bg-[#2c4b7b]">
+                                Update Load
+                            </button>
                         </div>
                     </form>
                 </div>

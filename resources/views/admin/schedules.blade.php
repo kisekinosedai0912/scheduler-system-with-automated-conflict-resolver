@@ -9,30 +9,45 @@
     @section('title-pane', 'Manage Schedules')
 
     <div class="outer-container flex flex-col md:flex-row items-center justify-end">
-        <div class="buttons flex items-center justify-end gap-2 w-80">
-            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active">
-                <span class="font-medium">Print</span>
-                <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
-                    viewBox="0 0 24 24"
-                    height="40"
-                    width="40"
-                    class="w-6 h-6"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
-                    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-                    <path d="M7 11l5 5l5 -5"></path>
-                    <path d="M12 4l0 12"></path>
-                </svg>
-            </button>
+        <div class="flex items-center justify-between w-full">
+            <select id="teacherSelect" class="form-control w-[16%]">
+                <option value="">Select Teacher</option>
+                @foreach($teachers as $teacher)
+                    <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
+                @endforeach
+            </select>
 
-            <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
-                    height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-width="1" d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"></path>
-                    <path stroke-width="1" d="M8 12H16"></path>
-                    <path stroke-width="1" d="M12 16V8"></path>
-                </svg>
-            </button>
+            <div class="buttons flex items-center justify-end gap-2 w-80">
+                <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="printButton">
+                    <span class="font-medium">Print</span>
+                    <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24"
+                        height="40"
+                        width="40"
+                        class="w-6 h-6"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                        <path d="M7 11l5 5l5 -5"></path>
+                        <path d="M12 4l0 12"></path>
+                    </svg>
+                </button>
+
+                <div>
+                    <button
+                        class="group relative w-10 h-10 rounded-full bg-[#223a5e] text-white hover:bg-[#2c4b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] transition duration-300 ease-in-out"
+                        title="Add New User"
+                        data-bs-toggle="modal"
+                        data-bs-target="#scheduleModal"
+                    >
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
         </div>
 
        <!-- Modal for Resolving Schedule Conflicts -->
@@ -84,81 +99,127 @@
             </div>
         </span>
 
+        <!-- Modal for adding Schedule -->
         <div class="modal fade" id="scheduleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header text-center bg-[#223a5e]">
-                        <h1 class="modal-title fs-5 text-center text-neutral-100" id="staticBackdropLabel">Create New Schedule</h1>
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-lg shadow-xl border-none">
+                    <div class="modal-header bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white p-4 rounded-t-lg">
+                        <h1 class="modal-title text-xl font-semibold" id="staticBackdropLabel">Create New Schedule</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
                     </div>
-                    <div class="modal-body">
-                        <form action="{{ route('admin.createSchedule') }}" method="post" id="schedules-form" class="grid grid-cols-1 gap-4">
+                    <div class="modal-body p-6">
+                        <form action="{{ route('admin.createSchedule') }}" method="post" id="schedules-form" class="space-y-4">
                             @csrf
                             @method('post')
 
-                            <!-- Dropdown selections -->
-                            <select name="teacher_id" id="teacher_id" class="form-control col-span-1">
-                                <option value="">Select Teacher</option>
-                                @foreach($teachers->unique('teacherName') as $teacher)
-                                    <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
-                                @endforeach
-                            </select>
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Teacher Dropdown -->
+                                <div>
+                                    <label for="teacher_id" class="block mb-2 font-medium">Select Teacher</label>
+                                    <select name="teacher_id" id="teacher_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Teacher</option>
+                                        @foreach($teachers->unique('teacherName') as $teacher)
+                                            <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <select id="semester" name="semester" class="form-control col-span-1">
-                                <option value="">Semester</option>
-                                @foreach($subjects->unique('semester') as $subject)
-                                    <option value="{{ $subject->semester }}">{{ $subject->semester }}</option>
-                                @endforeach
-                            </select>
+                                <!-- Semester Dropdown -->
+                                <div>
+                                    <label for="semester" class="block mb-2 font-medium">Semester</label>
+                                    <select id="semester" name="semester" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Semester</option>
+                                        @foreach($subjects->unique('semester') as $subject)
+                                            <option value="{{ $subject->semester }}">{{ $subject->semester }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <select id="category-select" name="categoryName" class="form-control col-span-1">
-                                <option value="">Select Category</option>
-                                @foreach($subjects->unique('category') as $subject)
-                                    <option value="{{ $subject->category }}">{{ $subject->category }}</option>
-                                @endforeach
-                            </select>
+                                <!-- Category Dropdown -->
+                                <div>
+                                    <label for="category-select" class="block mb-2 font-medium">Select Category</label>
+                                    <select id="category-select" name="categoryName" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Category</option>
+                                        @foreach($subjects->unique('category') as $subject)
+                                            <option value="{{ $subject->category }}">{{ $subject->category }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <select id="days" name="days[]" class="form-control col-span-1" multiple>
-                                <option value="M" selected>Monday</option>
-                                <option value="T">Tuesday</option>
-                                <option value="W">Wednesday</option>
-                                <option value="TH">Thursday</option>
-                                <option value="F">Friday</option>
-                            </select>
+                                <!-- Days Multiselect -->
+                                <div>
+                                    <label for="days" class="block mb-2 font-medium">Select Days</label>
+                                    <select id="days" name="days[]" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]" multiple>
+                                        <option value="M" selected>Monday</option>
+                                        <option value="T">Tuesday</option>
+                                        <option value="W">Wednesday</option>
+                                        <option value="TH">Thursday</option>
+                                        <option value="F">Friday</option>
+                                    </select>
+                                </div>
 
-                            <!-- Two-column grid for the small elements -->
-                            <div class="grid grid-cols-2 gap-4 col-span-1">
-                                <select name="subject_id" id="subject_id" class="form-control">
-                                    <option value="">Select Subject</option>
-                                    @foreach($subjects->unique('subjectName') as $subject)
-                                        <option value="{{ $subject->id }}">{{ $subject->subjectName }}</option>
-                                    @endforeach
-                                </select>
+                                <!-- Subject Dropdown -->
+                                <div>
+                                    <label for="subject_id" class="block mb-2 font-medium">Select Subject</label>
+                                    <select name="subject_id" id="subject_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Subject</option>
+                                        @foreach($subjects->unique('subjectName') as $subject)
+                                            <option value="{{ $subject->id }}">{{ $subject->subjectName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                                <select name="room_id" id="room_id" class="form-control">
-                                    <option value="">Select Room</option>
-                                    @foreach($classrooms->unique('roomName') as $classroom)
-                                        <option value="{{ $classroom->id }}">{{ $classroom->roomName }}</option>
-                                    @endforeach
-                                </select>
+                                <!-- Room Dropdown -->
+                                <div>
+                                    <label for="room_id" class="block mb-2 font-medium">Select Room</label>
+                                    <select name="room_id" id="room_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Room</option>
+                                        @foreach($classrooms->unique('roomName') as $classroom)
+                                            <option value="{{ $classroom->id }}">{{ $classroom->roomName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                                <input type="text" name="studentNum" id="student-number" class="form-control w-full p-2 rounded-md" placeholder="Student No.">
-                                <input type="text" name="yearSection" id="year-section" class="form-control w-full p-2 rounded-md" placeholder="Year & Section">
+                                <!-- Year Dropdown -->
+                                <div>
+                                    <label for="year" class="block mb-2 font-medium">Select Year</label>
+                                    <select name="year" id="year" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Year</option>
+                                        <option value="Grade 11">Grade 11</option>
+                                        <option value="Grade 12">Grade 12</option>
+                                    </select>
+                                </div>
 
+                                <!-- Section Input -->
+                                <div>
+                                    <label for="section" class="block mb-2 font-medium">Section</label>
+                                    <input type="text" name="section" id="section" placeholder="Enter Section" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                </div>
+
+                                <!-- Time Inputs -->
                                 <div class="col-span-2 grid grid-cols-2 gap-4">
-                                    <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-md timepicker" placeholder="Start Time (e.g. 02:30 PM)">
-                                    <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-md timepicker" placeholder="End Time (e.g. 03:30 PM)">
+                                    <div>
+                                        <label for="start-time" class="block mb-2 font-medium">Start Time</label>
+                                        <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e]" placeholder="Start Time (e.g. 02:30 PM)">
+                                    </div>
+                                    <div>
+                                        <label for="end-time" class="block mb-2 font-medium">End Time</label>
+                                        <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e]" placeholder="End Time (e.g. 03:30 PM)">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="flex justify-end gap-2 col-span-1">
-                                <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg">Save</button>
+                            <!-- Action Buttons -->
+                            <div class="flex justify-end gap-4 mt-6">
+                                <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg transition duration-300 hover:bg-[#223a5e] hover:text-white" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg transition duration-300 hover:bg-[#2c4b7b]">Save</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+
 
         @include('admin-modals.editSchedule')
     </div>
@@ -171,8 +232,9 @@
                 <th>Category</th>
                 <th>Subject</th>
                 <th class="text-center">Room</th>
-                <th class="text-center">Student #</th>
-                <th>Year/Sec</th>
+                {{-- <th class="text-center">Student #</th> --}}
+                <th>Grade</th>
+                <th>Section</th>
                 <th class="text-center">Day/s</th>
                 <th>Start Time</th>
                 <th>End Time</th>
@@ -181,14 +243,16 @@
         </thead>
         <tbody>
             @foreach ($schedules as $schedule)
-                <tr style="background-color: {{ $schedule->is_conflicted ? 'rgba(255, 0, 0, 0.6)' : 'white' }};">
+                {{-- <tr style="background-color: {{ $schedule->is_conflicted ? 'rgba(255, 0, 0, 0.6)' : 'white' }};"> --}}
+                <tr>
                     <td class="text-md font-light">{{ $schedule->teacher->teacherName }}</td>
                     <td class="text-md font-light">{{ $schedule->semester }}</td>
                     <td class="text-md font-light">{{ $schedule->categoryName }}</td>
                     <td class="text-md font-light">{{ $schedule->subject->subjectName }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->classroom->roomName }}</td>
-                    <td class="text-md font-light text-center">{{ $schedule->studentNum }}</td>
-                    <td class="text-md font-light">{{ $schedule->yearSection }}</td>
+                    {{-- <td class="text-md font-light text-center">{{ $schedule->studentNum }}</td> --}}
+                    <td class="text-md font-light">{{ $schedule->year }}</td>
+                    <td class="text-md font-light">{{ $schedule->section }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->days }}</td>
                     <td class="text-md font-light">{{ \Carbon\Carbon::parse($schedule->startTime)->format('g:i A') }}</td>
                     <td class="text-md font-light">{{ \Carbon\Carbon::parse($schedule->endTime)->format('g:i A') }}</td>
@@ -218,7 +282,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
         <script>
             $(document).ready(function() {
-                $('#schedulesTable').DataTable();
+                const table = $('#schedulesTable').DataTable();
 
                 $('.timepicker').timepicker({
                     showMeridian: true,
@@ -269,6 +333,47 @@
                     }
                 @endforeach
 
+                // Filter schedules based on selected teacher
+                $('#teacherSelect').on('change', function() {
+                    const selectedTeacherId = $(this).val();
+                    const selectedTeacherName = $(this).find('option:selected').text(); // Get the selected teacher's name
+
+                    // If no teacher is selected, reset the filter
+                    if (!selectedTeacherId) {
+                        table.search('').draw(); // Show all schedules
+                        window.load();
+                    } else {
+                        // Use the teacher's name for filtering
+                        table.column(0).search(selectedTeacherName).draw();
+                    }
+                });
+
+                $('#printButton').on('click', function() {
+                    const teacherId = $('#teacherSelect').val(); // Get the selected teacher ID
+                    if (teacherId) {
+                        // Open a new window with the print-friendly view
+                        const printWindow = window.open(`/admin/print-schedule/${teacherId}`, '_blank');
+
+                        // Wait for the new window to load, then trigger the print dialog
+                        printWindow.onload = function() {
+                            printWindow.print();
+
+                            // Use the afterprint event to reset the dropdown and redraw the DataTable
+                            printWindow.onafterprint = function() {
+                                // Reset the dropdown to default
+                                $('#teacherSelect').val('');
+
+                                // Show all schedules
+                                table.search('').draw();
+
+                                // Close the print window after printing
+                                printWindow.close();
+                            };
+                        };
+                    } else {
+                        alert('Please select a teacher to print their schedule.'); // Alert if no teacher is selected
+                    }
+                });
 
                 $('#schedules-form').on('submit', function(event) {
                     event.preventDefault();
@@ -276,8 +381,12 @@
                     // Close the add schedule modal
                     $('#scheduleModal').modal('hide');
 
+                    const selectedDays = $('#days').val(); // Get selected days
+                    console.log('Selected Days:', selectedDays);
+
                     // Check if there's a previously stored original schedule data
                     const originalScheduleData = $(this).serialize(); // serializing the stored data before sending to the backend
+                    console.log('Form Data:', originalScheduleData);
 
                     $.ajax({
                         url: $(this).attr('action'), // Directly base from the action attribute in the schedule form submission
@@ -380,26 +489,62 @@
                     if (selectedSlots.length > 0 && window.originalScheduleData) {
                         const formData = new FormData();
 
-                        // Add the original schedule data
-                        Object.keys(window.originalScheduleData).forEach(key => {
-                            if (key === 'days') {
-                                // Use the days from the selected slots
-                                selectedSlots.forEach((slot, index) => {
-                                    formData.append(`days[${index}]`, slot.day);
-                                });
-                            } else if (key === 'startTime' || key === 'endTime') {
-                                // Format time for server
-                                formData.append(key, formatTimeForServer(window.originalScheduleData[key]));
+                        // Debugging: Log the original schedule data
+                        console.log('Original Schedule Data:', window.originalScheduleData);
+
+                        // Explicitly check and add each required field
+                        const requiredFields = [
+                            'teacher_id',
+                            'semester',
+                            'categoryName',
+                            'subject_id',
+                            'room_id',
+                            'year',
+                            'section'
+                        ];
+
+                        requiredFields.forEach(field => {
+                            // Fallback to form input if not in original data
+                            let value = window.originalScheduleData[field] ||
+                                        $(`#${field}`).val() ||
+                                        $(`input[name="${field}"]`).val() ||
+                                        $(`select[name="${field}"]`).val();
+
+                            if (field === 'section' && !value) {
+                                // Explicitly try to get section value
+                                value = $('#section').val() ||
+                                        $('input[name="section"]').val() ||
+                                        'Default Section';
+                            }
+
+                            if (value) {
+                                formData.append(field, value);
+                                console.log(`Appending ${field}:`, value);
                             } else {
-                                formData.append(key, window.originalScheduleData[key]);
+                                console.warn(`No value found for ${field}`);
                             }
                         });
 
-                        // Add all selected slots as JSON
+                        // Ensure days are added
+                        selectedSlots.forEach((slot, index) => {
+                            formData.append(`days[${index}]`, slot.day);
+                        });
+
+                        // Set start and end times from the first selected slot
+                        formData.append('startTime', selectedSlots[0].startTime);
+                        formData.append('endTime', selectedSlots[0].endTime);
+
+                        // Add selected slots as JSON
                         formData.append('selected_slots', JSON.stringify(selectedSlots));
 
-                        // Add the CSRF token for the request security
-                        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                        // Add CSRF token
+                        formData.append('_token', $('meta[name="csrf-token"]').attr('content') ||
+                            $('input[name="_token"]').val());
+
+                        // Debug: Log all form data
+                        for (let pair of formData.entries()) {
+                            console.log(pair[0] + ': ' + pair[1]);
+                        }
 
                         $.ajax({
                             url: "{{ route('admin.createSchedule') }}",
@@ -408,30 +553,40 @@
                             processData: false,
                             contentType: false,
                             success: function(response) {
-                                // Redirect to schedules page on successful creation
                                 window.location.href = "{{ route('admin.schedules') }}";
                             },
                             error: function(xhr, status, error) {
-                                if (xhr.status === 409) { // Conflict status
-                                    const response = xhr.responseJSON;
+                                console.error('Full Error Response:', xhr);
 
-                                    // Show available slots modal again if there are conflicts
-                                    if (response.status === 'conflict') {
-                                        openResolveModal(response.original_schedule, response.available_slots);
-                                    } else {
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Conflict Error',
-                                            text: response.message || 'An unresolved conflict occurred.'
-                                        });
+                                // More detailed error handling
+                                let errorMessage = 'An error occurred while creating the schedule.';
+
+                                if (xhr.responseJSON) {
+                                    if (xhr.responseJSON.errors) {
+                                        // Laravel validation errors
+                                        const errors = xhr.responseJSON.errors;
+                                        errorMessage = Object.values(errors).flat().join('\n');
+                                    } else if (xhr.responseJSON.message) {
+                                        // Custom error message
+                                        errorMessage = xhr.responseJSON.message;
                                     }
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: 'An unexpected error occurred.'
-                                    });
                                 }
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: errorMessage,
+                                    footer: `
+                                        <div>
+                                            <p>Troubleshooting Tips:</p>
+                                            <ul>
+                                                <li>Ensure all required fields are filled</li>
+                                                <li>Check that you've selected a valid section</li>
+                                                <li>Verify all schedule details</li>
+                                            </ul>
+                                        </div>
+                                    `
+                                });
                             }
                         });
                     } else {
@@ -442,7 +597,6 @@
                         });
                     }
                 });
-
 
                 function formatTimeForServer(time) {
                     // Check if time is already in 24-hour format

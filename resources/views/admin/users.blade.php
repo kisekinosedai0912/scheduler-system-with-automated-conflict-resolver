@@ -6,45 +6,67 @@
     @endsection
     @section('title-pane', 'User Management')
 
-    <div class="outer-container flex items-center justify-between bg-white rounded-sm px-2">
-        {{-- Search input box--}}
-        <form class="flex items-center relative md:w-3/12 my-2" id="search-form">
-            <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
-            <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
-            </svg>
-            <input type="search" id="search" name="search" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1. rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300" value="{{ request('search') }}">
-        </form>
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 px-4 py-3">
+        <div class="flex items-center space-x-4">
+            <div class="relative flex-grow">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
 
-        <div class="buttons flex items-center justify-between">
-            {{-- Add button with modal trigger --}}
-            <button class="group cursor-pointer outline-none hover:rotate-90 duration-300" title="Add New" data-bs-toggle="modal" data-bs-target="#create-user-modal">
-                <svg class="stroke-blue-950 fill-none group-hover:fill-blue-100 group-active:stroke-blue-900 group-active:fill-blue-950 group-active:duration-0 duration-300" viewBox="0 0 24 24"
-                    height="50px" width="50px" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-width="1" d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"></path>
-                    <path stroke-width="1" d="M8 12H16"></path>
-                    <path stroke-width="1" d="M12 16V8"></path>
-                </svg>
-            </button>
+                <form id="search-form" class="w-full">
+                    <input
+                        type="search"
+                        id="search"
+                        name="search"
+                        placeholder="Search user..."
+                        value="{{ request('search') }}"
+                        class="w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-md
+                                focus:ring-2 focus:ring-[#223a5e] focus:border-transparent
+                                transition duration-300 ease-in-out
+                                placeholder-gray-500"
+                    />
+                </form>
+            </div>
+
+            {{-- Add Button --}}
+            <div>
+                <button
+                    class="group relative w-10 h-10 rounded-full bg-[#223a5e] text-white hover:bg-[#2c4b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] transition duration-300 ease-in-out"
+                    title="Add New User"
+                    data-bs-toggle="modal"
+                    data-bs-target="#create-user-modal"
+                >
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                </button>
+            </div>
         </div>
+
         <!-- Modal -->
         <div class="modal fade" id="create-user-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-lg shadow-xl border-none">
                     {{-- Modal header --}}
-                    <div class="modal-header text-center bg-[#223a5e]">
-                        <h1 class="modal-title fs-5 text-center text-neutral-100">Register New User</h1>
+                    <div class="modal-header bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white p-4 rounded-t-lg">
+                        <h1 class="modal-title text-xl font-semibold">Register New User</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" aria-hidden="false" style="filter: brightness(0) invert(1);"></button>
                     </div>
+
                     {{-- Modal body --}}
-                    <div class="modal-body">
-                        <form id="create-user-form" method="post">
+                    <div class="modal-body p-6">
+                        <form id="create-user-form" method="post" class="space-y-4">
                             @csrf
                             @method('post')
 
                             <!-- Teacher Selection -->
-                            <div class="mt-4">
-                                <x-input-label for="teacher_id" :value="__('Select Teacher')" />
-                                <select name="teacher_id" id="teacher_id" class="form-select rounded-md" required>
+                            <div>
+                                <label for="teacher_id" class="block mb-2 font-medium">Select Teacher</label>
+                                <select name="teacher_id" id="teacher_id" class="form-select w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]" required>
                                     <option value="">Select a Teacher</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}">{{ $teacher->teacherName }}</option>
@@ -53,41 +75,52 @@
                             </div>
 
                             <!-- Email Address -->
-                            <div class="mt-4">
-                                <x-input-label for="email" :value="__('Email')" />
-                                <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+                            <div>
+                                <label for="email" class="block mb-2 font-medium">Email</label>
+                                <input type="email"
+                                    id="email"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                    name="email"
+                                    :value="old('email')"
+                                    required
+                                    autocomplete="username" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
 
                             <!-- User Role -->
-                            <div class="mt-4">
-                                <x-input-label for="roleSelect" :value="__('Select Role')" />
-                                <select name="user_role" id="roleSelect" class="form-select rounded-md" aria-label="Role Select">
+                            <div>
+                                <label for="roleSelect" class="block mb-2 font-medium">Select Role</label>
+                                <select name="user_role" id="roleSelect" class="form-select w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]" aria-label="Role Select">
                                     <option value="faculty">Faculty</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
 
                             <!-- Password -->
-                            <div class="mt-4">
-                                <x-input-label for="password" :value="__('Password')" />
-                                <x-text-input id="password" class="block mt-1 w-full"
-                                                type="password"
-                                                name="password"
-                                                required autocomplete="new-password" />
+                            <div>
+                                <label for="password" class="block mb-2 font-medium">Password</label>
+                                <input type="password"
+                                    id="password"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                    name="password"
+                                    required
+                                    autocomplete="new-password" />
                                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
                             </div>
 
                             <!-- Confirm Password -->
-                            <div class="mt-4">
-                                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                                <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                                type="password"
-                                                name="password_confirmation" required autocomplete="new-password" />
+                            <div>
+                                <label for="password_confirmation" class="block mb-2 font-medium">Confirm Password</label>
+                                <input type="password"
+                                    id="password_confirmation"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                    name="password_confirmation"
+                                    required
+                                    autocomplete="new-password" />
                                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
+                            <div class="flex items-center justify-end mt-6">
                                 <x-primary-button id="submit-user-btn" class="ms-4">
                                     {{ __('Register') }}
                                 </x-primary-button>
@@ -102,33 +135,69 @@
     <hr class="my-2">
     {{-- Table --}}
     <span class="hidden md:block">
-        <table class="table table-hover cursor-pointer border border-slate-950">
-            <thead>
+        <table class="min-w-full bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+            <thead class="bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white">
                 <tr>
-                    <th scope="col">User</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Action</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">User</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Role</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Action</th>
                 </tr>
             </thead>
-            <tbody id="userTableBody">
+            <tbody id="userTableBody" class="divide-y divide-gray-200">
                 @foreach ($users as $user)
                     @include('admin-modals.editUser', ['user' => $user])
-                    <tr>
-                        <td class="text-md font-light">{{ $user->name }}</td>
-                        <td class="text-md font-light">{{ $user->email }}</td>
-                        <td class="text-md font-light">{{ $user->user_role }}</td>
-                        <td class="flex items-start justify-start">
-                            <a href="#" class="btn btn-success bg-transparent text-green-600 text-xl mr-2 hover:border-green-200 hover:text-green-900" data-bs-toggle="modal" data-bs-target="#edit-user-{{ $user->id }}">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="{{ route('admin.delete_user', $user->id) }}" method="post" id="delete-form-{{ $user->id }}">
-                                @csrf
-                                @method('DELETE')
-                                <a href="#" class="btn btn-danger bg-transparent text-red-600 text-xl hover:border-red-200 hover:text-red-700" onclick="confirmDeletion(event, 'delete-form-{{ $user->id }}')">
-                                    <i class="fas fa-trash"></i>
+                    <tr class="hover:bg-gray-50 transition duration-200 ease-in-out">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-[#223a5e] text-white rounded-full flex items-center justify-center font-bold">
+                                    {{ strtoupper(substr($user->name, 0, 2)) }}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                @if($user->user_role == 'admin') bg-green-100 text-green-800
+                                @elseif($user->user_role == 'teacher') bg-blue-100 text-blue-800
+                                @else bg-gray-100 text-gray-800
+                                @endif">
+                                {{ $user->user_role }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-3">
+                                <a
+                                    href="#"
+                                    class="text-green-500 hover:text-green-700 transition duration-200 ease-in-out"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#edit-user-{{ $user->id }}"
+                                    title="Edit User"
+                                >
+                                    <i class="fas fa-edit text-xl"></i>
                                 </a>
-                            </form>
+                                <form
+                                    action="{{ route('admin.delete_user', $user->id) }}"
+                                    method="post"
+                                    id="delete-form-{{ $user->id }}"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <a
+                                        href="#"
+                                        class="text-red-500 hover:text-red-700 transition duration-200 ease-in-out"
+                                        onclick="confirmDeletion(event, 'delete-form-{{ $user->id }}')"
+                                        title="Delete User"
+                                    >
+                                        <i class="fas fa-trash text-xl"></i>
+                                    </a>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -138,52 +207,77 @@
             {{ $users->links() }}
         </div>
     </span>
-    {{-- Table for mobile--}}
+
+    {{-- Table for mobile --}}
     <span class="block md:hidden">
-        <table class="table shadow-sm">
-            <thead>
-                <tr>
-                    <th scope="col">User</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="mobileUserTableBody">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+            <div class="divide-y divide-gray-200">
                 @foreach ($users as $user)
-                    @include('admin-modals.editUser', ['user' => $user])
-                    <tr>
-                        <td class="text-md font-light">{{ $user->name }}</td>
-                        <td class="text-md font-light">{{ $user->email }}</td>
-                        <td class="text-md font-light">{{ $user->user_role }}</td>
-                        <td>
-                            <div class="dropdown">
-                                <button type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    @include('admin-modals.editUser ', ['user' => $user])
+                    <div class="px-4 py-4 hover:bg-gray-50 transition duration-200 ease-in-out">
+                        <div class="flex justify-between items-center">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3">
+                                    <div class="flex-shrink-0 h-10 w-10 bg-[#223a5e] text-white rounded-full flex items-center justify-center font-bold">
+                                        {{ strtoupper(substr($user->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            @if($user->user_role == 'admin') bg-green-100 text-green-800
+                                            @elseif($user->user_role == 'teacher') bg-blue-100 text-blue-800
+                                            @else bg-gray-100 text-gray-800
+                                            @endif">
+                                            {{ $user->user_role }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <button
+                                    type="button"
+                                    class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] rounded-full p-2"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                >
                                     <i class="fas fa-ellipsis-h"></i>
                                 </button>
-                                <ul class="dropdown-menu">
+
+                                <ul class="absolute right-0 z-10 hidden mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dropdown-menu">
                                     <li>
-                                        <a href="#" class="text-md ml-4" data-bs-toggle="modal" data-bs-target="#edit-user-{{ $user->id }}">
-                                            Edit
+                                        <a
+                                            href="#"
+                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#edit-user-{{ $user->id }}"
+                                        >
+                                            <i class="fas fa-edit mr-2 text-green-500"></i>Edit
                                         </a>
                                     </li>
                                     <li>
                                         <form action="{{ route('admin.delete_user', $user->id) }}" method="post" id="delete-form-{{ $user->id }}">
                                             @csrf
                                             @method('DELETE')
-                                            <a href="#" class="text-md ml-4" onclick="confirmDeletion(event, 'delete-form-{{ $user->id }}')">
-                                                Delete
+                                            <a
+                                                href="#"
+                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                onclick="confirmDeletion(event, 'delete-form-{{ $user->id }}')"
+                                            >
+                                                <i class="fas fa-trash mr-2 text-red-500"></i>Delete
                                             </a>
                                         </form>
                                     </li>
                                 </ul>
                             </div>
-                        </td>
-                    </tr>
-                </tbody>
-            @endforeach
-        </table>
-        <div class="mt-2" id="mobilePaginationLinks">
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="mt-4" id="mobilePaginationLinks">
             {{ $users->links() }}
         </div>
     </span>

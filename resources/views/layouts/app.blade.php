@@ -24,10 +24,10 @@
 
         <!-- Page Heading -->
         <span class="hidden md:block">
-            <div class="flex items-center justify-between bg-[#223a5e] p-6 md:w-screen">
-                <div class="school-name flex items-center justify-between lg:ml-80 gap-2">
+            <div class="flex items-center justify-between bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] p-6 md:w-screen shadow-md">
+                <div class="school-name flex items-center justify-between lg:ml-80 gap-4">
                     <span>
-                        <img src="{{ URL('images/schsLogo.jfif') }}" alt="SCHS logo" width="70" height="70">
+                        <img src="{{ URL('images/schsLogo.jfif') }}" alt="SCHS logo" class="w-16 h-16 rounded-full shadow-lg">
                     </span>
                     <h1 class="font-bold md:text-2xl font-open text-neutral-100">Sagay City Senior High School</h1>
                 </div>

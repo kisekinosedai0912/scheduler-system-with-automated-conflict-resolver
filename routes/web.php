@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Events\CalendarEventsController;
 use App\Http\Controllers\Auth\NewRegistrationController;
 use App\Http\Controllers\Admin\ConflictController;
+use App\Http\Controllers\Admin\PrintController;
+use App\Http\Controllers\Admin\EventController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -46,6 +48,8 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::delete('/admin/{eventId}/delete-event', [AdminController::class, 'deleteEvent'])->name('admin.deleteEvent');
     Route::patch('/admin/{eventId}/drag-drop', [AdminController::class, 'dragEvent'])->name('admin.dragEvent');
 
+    Route::get('/admin/print-schedule/{teacherId}', [PrintController::class, 'print'])->name('print');
+    Route::get('/admin/print-calendar', [EventController::class, 'printCalendar'])->name('print-calendar');
 
     // Route for schedules page
     Route::get('/admin/dashboard/schedules', [ConflictController::class, 'schedules'])->name('admin.schedules');

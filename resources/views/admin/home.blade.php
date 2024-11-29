@@ -10,64 +10,85 @@
     @endsection
 
     <div class="row w-full">
-            <div class="input-control md:ml-[24px] ml-[14px] mr-4 flex items-center justify-between gap-2 w-[calc(100%-24px)] bg-white rounded-md">
-                {{-- Search input box--}}
-                <div class="flex items-center relative md:w-3/12 my-2">
-                    <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
-                    <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
+        <div class="input-control md:ml-[24px] ml-[14px] mr-4 flex items-center justify-between gap-2 w-[calc(100%-24px)] bg-white rounded-md">
+            {{-- Search input box--}}
+            <div class="flex items-center relative md:w-3/12 my-2">
+                <svg class="absolute left-4 w-4 h-4 text-gray-500" aria-hidden="true" viewBox="0 0 24 24">
+                <g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g>
+                </svg>
+                <input type="search" id="search-event" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300">
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-lg flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="print-button">
+                    <span class="font-medium">Print</span>
+                    <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24"
+                        height="40"
+                        width="40"
+                        class="w-6 h-6"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                        <path d="M7 11l5 5l5 -5"></path>
+                        <path d="M12 4l0 12"></path>
                     </svg>
-                    <input type="search" id="search-event" placeholder="search event" class="w-full h-10 pl-10 pr-4 px-1.5 rounded-md text-gray-900 bg-white focus:outline-none focus:bg-[#223a5e] transition duration-300">
-                </div>
+                </button>
 
                 {{-- For large screens button --}}
                 <button class="buttonDownload rounded-md hidden md:block" id="print-button">Export to excel</button>
                 {{-- For mobile button --}}
                 <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button>
             </div>
+        </div>
     </div>
 
     <!-- Modal -->
     <div class="modal fade" id="calendar-events" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content" aria-hidden="false">
-                <div class="modal-header bg-[#223a5e] text-neutral-100">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Create Calendar Activities</h1>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-lg shadow-xl border-none">
+                <div class="modal-header bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white p-4 rounded-t-lg">
+                    <h1 class="modal-title text-xl font-semibold" id="exampleModalLabel">Create Calendar Activities</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
                 </div>
-                <div class="modal-body w-full">
+                <div class="modal-body p-6">
                     {{-- Event title input --}}
-                    <input type="text" name="eventTitle" id="event-title" placeholder="Event Title:" class="form-control p-2 w-full">
-                    <span class="text-red-600" id="titleError"></span>
-                    <div class="grid grid-cols-2 gap-2 mt-3">
+                    <div class="mb-4">
+                        <label for="event-title" class="font-medium">Event Title:</label>
+                        <input type="text" name="eventTitle" id="event-title" placeholder="Enter Event Title" class="form-control p-2 mt-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                        <span class="text-red-600" id="titleError"></span>
+                    </div>
 
+                    <div class="grid grid-cols-2 gap-4">
                         {{-- Start date input --}}
                         <div class="containers">
                             <label for="start-date" class="font-medium">Start Date:</label>
-                            <input type="date" name="startDate" id="start-date" class="form-control">
+                            <input type="date" name="startDate" id="start-date" class="form-control border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                         </div>
 
                         {{-- Start time input --}}
                         <div class="containers">
                             <label for="start-time" class="font-medium">Start Time:</label>
-                            <input type="time" name="startTime" id="start-time" class="form-control">
+                            <input type="time" name="startTime" id="start-time" class="form-control border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                         </div>
 
                         {{-- End date input --}}
                         <div class="containers">
                             <label for="end-date" class="font-medium">End Date:</label>
-                            <input type="date" name="endDate" id="end-date" class="form-control">
+                            <input type="date" name="endDate" id="end-date" class="form-control border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                         </div>
 
                         {{-- End time input --}}
                         <div class="containers">
                             <label for="end-time" class="font-medium">End Time:</label>
-                            <input type="time" name="endTime" id="end-time" class="form-control">
+                            <input type="time" name="endTime" id="end-time" class="form-control border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                         </div>
                     </div>
 
                     {{-- Buttons --}}
-                    <div class="flex justify-end gap-2 col-span-2 mt-3">
-                        <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg" id="save-btn">Save Event</button>
+                    <div class="flex justify-end gap-4 mt-6">
+                        <button type="button" class="border-[#223a5e] border-2 p-2 w-[120px] text-[#223a5e] rounded-lg transition duration-300 hover:bg-[#223a5e] hover:text-white" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="bg-[#223a5e] p-2 w-[120px] text-white rounded-lg transition duration-300 hover:bg-[#2c4b7b]" id="save-btn">Save Event</button>
                     </div>
                 </div>
             </div>
@@ -76,23 +97,61 @@
 
     {{-- Event details modal --}}
     <div class="modal fade" id="event-details" tabindex="-1" aria-labelledby="eventDetailsLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-[#223a5e] text-neutral-100">
-                    <h1 class="modal-title fs-5" id="eventDetailsLabel">Event Details</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-lg shadow-xl border-none">
+                <div class="modal-header bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white p-4 rounded-t-lg">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <h1 class="modal-title text-xl font-semibold" id="eventDetailsLabel">Event Details</h1>
+                    </div>
+                    <button type="button" class="close text-white hover:text-gray-200 transition duration-300" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="text-2xl">&times;</span>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <p><strong>Event Title:</strong> <span id="modal-event-title"></span></p>
-                    <div class=" grid grid-cols-2 gap-2 mt-2">
-                        <p><strong>Start Date:</strong> <span id="modal-event-start"></span></p>
-                        <p><strong>Start Time:</strong> <span id="modal-event-timeStart"></span></p>
-                        <p><strong>End Date:</strong> <span id="modal-event-end"></span></p>
-                        <p><strong>End Time:</strong> <span id="modal-event-timeEnd"></span></p>
+                <div class="modal-body p-6">
+                    <div class="space-y-4">
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h2 class="text-lg font-bold text-[#223a5e] mb-2">Event Title</h2>
+                            <p class="text-gray-800" id="modal-event-title"></p>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-1">Start Date</h3>
+                                <p class="text-gray-800" id="modal-event-start"></p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-1">Start Time</h3>
+                                <p class="text-gray-800" id="modal-event-timeStart"></p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-1">End Date</h3>
+                                <p class="text-gray-800" id="modal-event-end"></p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-1">End Time</h3>
+                                <p class="text-gray-800" id="modal-event-timeEnd"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" id="delete-btn" class="bg-red-600 p-2 w-[120px] text-white rounded-lg" id="delete-btn" data-bs-dismiss="modal">Delete Event</button>
+                <div class="modal-footer bg-gray-100 p-4 rounded-b-lg flex justify-between items-center">
+                    <button type="button" class="text-gray-600 hover:text-gray-800 transition duration-300" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button
+                        type="submit"
+                        id="delete-btn"
+                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-300 flex items-center"
+                        data-bs-dismiss="modal"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        Delete Event
+                    </button>
                 </div>
             </div>
         </div>
@@ -356,23 +415,26 @@
 
                 // Function to export calendar data in excel file
                 $('#print-button').on('click', function() {
-                    if (events.length === 0) {
+                    // Option 1: Open in a new tab for printing
+                    window.open("{{ route('print-calendar') }}", '_blank');
+
+                    // Option 2: If you want to keep the Excel export functionality
+                    if (events.length > 0) {
+                        let eventList = events.map(event => ({
+                            Title: event.title,
+                            StartDate: moment(event.start).format('YYYY-MM-DD'),
+                            EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
+                            StartTime: moment(event.start).format('HH:mm'),
+                            EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
+                        }));
+
+                        // let ws = XLSX.utils.json_to_sheet(eventList);
+                        // let wb = XLSX.utils.book_new();
+                        // XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
+                        // XLSX.writeFile(wb, "Calendar_Events.xlsx");
+                    } else {
                         alert('No events to export.');
-                        return;
                     }
-
-                    let eventList = events.map(event => ({
-                        Title: event.title,
-                        StartDate: moment(event.start).format('YYYY-MM-DD'),
-                        EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
-                        StartTime: moment(event.start).format('HH:mm'),
-                        EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
-                    }));
-
-                    let ws = XLSX.utils.json_to_sheet(eventList);
-                    let wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
-                    XLSX.writeFile(wb, "Calendar_Events.xlsx");
                 });
             });
         </script>

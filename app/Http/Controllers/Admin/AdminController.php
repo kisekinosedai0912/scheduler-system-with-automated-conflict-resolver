@@ -153,6 +153,16 @@ class AdminController extends Controller
         ]);
 
         try {
+            // Check if a subject with the same name and semester already exists
+            $existingSubject = Subjects::where('subjectName', $data['subjectName'])
+                ->where('semester', $data['semester'])
+                ->first();
+
+            // If an existing subject is found, return with an error message
+            if ($existingSubject) {
+                return redirect()->back()->with('error', 'Subject already exists, cannot add duplicate ones');
+            }
+
             Subjects::create($data);
 
         } catch (\Exception $e) {
@@ -252,7 +262,6 @@ class AdminController extends Controller
             'teacherName' => 'required|string',
             'email' => 'required|string',
             'contact' => 'required|string',
-            'numberHours' => 'required|integer'
         ]);
 
         try {
@@ -262,7 +271,7 @@ class AdminController extends Controller
                 'email' => $request->input('email'),
                 //'subject_id' => Subjects::where('subjectName', $request->input('subjectName'))->first()->id,
                 'contact' => $request->input('contact'),
-                'numberHours' => $request->input('numberHours')
+                // 'numberHours' => $request->input('numberHours')
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());

@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('categoryName');
             $table->unsignedBigInteger('subject_id');
             $table->foreign('subject_id')->references('id')->on('subjects');
-            $table->integer('studentNum');
-            $table->string('yearSection');
-            $table->string('days', 5);
+            $table->string('year');
+            $table->string('section');
+            $table->string('days', 255);
             $table->integer('room_id');
             $table->time('startTime');
             $table->time('endTime');
