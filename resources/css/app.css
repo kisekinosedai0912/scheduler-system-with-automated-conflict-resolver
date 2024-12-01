@@ -73,3 +73,68 @@ body {
         opacity: 0.4;
     }
 }
+
+/* Data tables styling */
+#schedulesTable {
+    width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+#schedulesTable thead {
+    background-color: #223a5e;
+    color: white;
+}
+
+#schedulesTable thead th {
+    padding: 12px 15px !important;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #2c4b7b;
+    white-space: nowrap;
+}
+
+#schedulesTable tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+#schedulesTable tbody tr:hover {
+    background-color: rgba(34, 58, 94, 0.05);
+}
+
+#schedulesTable tbody td {
+    padding: 10px 15px !important;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
+}
+
+#schedulesTable .dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+#schedulesTable .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #223a5e;
+    color: white !important;
+}
+
+#schedulesTable .dataTables_wrapper .dataTables_filter input {
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    width: 250px;
+}
+
+#schedulesTable .actions-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}

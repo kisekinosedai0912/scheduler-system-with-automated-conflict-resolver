@@ -17,7 +17,7 @@
                             @method('put')
 
                             <div>
-                                <label for="edit-semester-select-{{ $subject->id }}" class="block mb-2 font-medium">Select Semester</label>
+                                <label for="edit-semester-select-{{ $subject->id }}" class="block mb-2 font-medium">Semester</label>
                                 <select id="edit-semester-select-{{ $subject->id }}" name="semester"
                                     class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Semester</option>
@@ -31,7 +31,41 @@
                             </div>
 
                             <div>
-                                <label for="edit-category" class="block mb-2 font-medium">Select Subject Category</label>
+                                <label for="edit-track-{{ $subject->id }}" class="block mb-2 font-medium">Track</label>
+                                <select id="edit-track-{{ $subject->id }}" name="track"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                    <option value="">Select Track</option>
+                                    <option value="Academic Track" {{ $subject->track == 'Academic Track' ? 'selected' : '' }}>Academic Track</option>
+                                    <option value="TVL Track" {{ $subject->track == 'TVL Track' ? 'selected' : '' }}>TVL Track</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="edit-strand-{{ $subject->id }}" class="block mb-2 font-medium">Strand</label>
+                                <select id="edit-strand-select-{{ $subject->id }}" name="strand"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                    <option value="">Select strand</option>
+                                    @foreach($paginateSubjects->unique('strand') as $strand)
+                                        <option value="{{ $strand->strand }}"
+                                            {{ $strand->strand == $subject->strand ? 'selected' : '' }}>
+                                            {{ $strand->strand }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="edit-specialization-{{ $subject->id }}" class="block mb-2 font-medium">Specialization (Optional)</label>
+                                <input type="text"
+                                    class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                    name="specialization"
+                                    id="edit-specialization-{{ $subject->id }}"
+                                    value="{{ $subject->specialization }}"
+                                    placeholder="Enter Specialization">
+                            </div>
+
+                            <div>
+                                <label for="edit-category" class="block mb-2 font-medium">Subject Category</label>
                                 <select name="category" id="edit-category"
                                     class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Subject Category</option>

@@ -101,7 +101,6 @@
                                     name="contact"
                                     class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
                                     placeholder="Enter contact number"
-                                    pattern="[0-9]{10}"
                                     required>
                             </div>
 

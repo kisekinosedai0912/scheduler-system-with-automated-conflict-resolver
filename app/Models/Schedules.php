@@ -43,23 +43,13 @@ class Schedules extends Model
 
     // Private function exclusive only to the schedules model, this function will handle the checking of the conflicted schedules
     public function hasConflict() {
-        // Debugging statement in case of errors
-        // \Log::info('Checking conflicts for schedule', [
-        //     'schedule_id' => $this->id,
-        //     'teacher_id' => $this->teacher_id,
-        //     'days' => $this->days,
-        //     'startTime' => $this->startTime,
-        //     'endTime' => $this->endTime
-        // ]);
-
         // Split the days of the current schedule and convert to array
         $currentScheduleDays = explode('-', $this->days);
 
-        // Find conflicting schedules for the same teacher
-        return Schedules::where('teacher_id', $this->teacher_id)
-            ->where('id', '!=', $this->id)
+        // Find conflicting schedules
+        return Schedules::where('id', '!=', $this->id)
             ->where(function($query) {
-                // Query the time constraints and check if they overlap
+                // Time overlap condition
                 $query->whereBetween('startTime', [$this->startTime, $this->endTime])
                       ->orWhereBetween('endTime', [$this->startTime, $this->endTime])
                       ->orWhere(function($query) {
@@ -68,11 +58,28 @@ class Schedules extends Model
                       });
             })
             ->where(function($query) use ($currentScheduleDays) {
-                // Check for days that overlap to query the result of conflict schedule
+                // Check for days that overlap
                 $query->where(function($subQuery) use ($currentScheduleDays) {
                     foreach ($currentScheduleDays as $day) {
                         $subQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
                     }
+                });
+            })
+            ->where(function($query) {
+                // Conflict scenarios
+                $query->where(function($subQuery) {
+                    // Scenario 1: Same teacher, same scheduled time & day (even in different sections)
+                    $subQuery->where('teacher_id', $this->teacher_id);
+                })
+                ->orWhere(function($subQuery) {
+                    // Scenario 2: Same teacher, same scheduled time, day & section
+                    $subQuery->where('teacher_id', $this->teacher_id)
+                             ->where('section', $this->section);
+                })
+                ->orWhere(function($subQuery) {
+                    // Scenario 3: Different teachers, same scheduled time, day and section
+                    $subQuery->where('section', $this->section)
+                             ->where('teacher_id', '!=', $this->teacher_id);
                 });
             })
             ->exists();

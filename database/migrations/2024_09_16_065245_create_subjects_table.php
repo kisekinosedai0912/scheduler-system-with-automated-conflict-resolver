@@ -14,9 +14,12 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('semester');
+            $table->string('track');
+            $table->string('strand');
+            $table->string('specialization')->nullable();
             $table->string('category');
             $table->string('subjectName');
-            $table->string('description');
+            $table->string('description')->nullable();
         });
     }
 

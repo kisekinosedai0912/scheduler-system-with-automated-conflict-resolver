@@ -22,6 +22,22 @@
             >
         </form>
 
+        <div class="flex items-center justify-center gap-2">
+            <label for="sort-strand" class="block font-medium">Filter</label>
+            <select name="sort_by_strand" id="sort-strand" class="form-control text-xs w-[100%] p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                <option class="text-xs" value="">All</option>
+                @foreach ($uniqueStrands as $strand)
+                    <option
+                        class="text-xs"
+                        value="{{ $strand }}"
+                        {{ request('sort_by_strand') == $strand ? 'selected' : '' }}
+                    >
+                        {{ $strand }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         <div>
             <button
                 class="group relative w-10 h-10 rounded-full bg-[#223a5e] text-white hover:bg-[#2c4b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] transition duration-300 ease-in-out"
@@ -55,13 +71,44 @@
                                 @method('post')
 
                                 <div>
-                                    <label for="semester" class="block mb-2 font-medium">Select Semester</label>
+                                    <label for="semester" class="block mb-2 font-medium">Semester</label>
                                     <select name="semester" id="semester" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option disabled selected value="">Select Semester</option>
                                         <option value="1st semester">1st Semester</option>
                                         <option value="2nd semester">2nd Semester</option>
                                     </select>
                                 </div>
+
+                                <div>
+                                    <label for="track" class="block mb-2 font-medium">Track</label>
+                                    <select name="track" id="track" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option disabled selected value="">Select Track</option>
+                                        <option value="TVL Track">TVL Track</option>
+                                        <option value="Academic Track">Academic Track</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="strand" class="block mb-2 font-medium">Strand</label>
+                                    <select name="strand" id="strand" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option disabled selected value="">Select Strand</option>
+                                        <option value="IAS">Industrial Arts Strand</option>
+                                        <option value="HE">Home Economics Strand</option>
+                                        <option value="ICT">Information & Communications Technology Strand</option>
+                                        <option value="HUMMS">Humanities and Social Sciences Strand</option>
+                                        <option value="GAS">General Economics Strand</option>
+                                    </select>
+                                </div>
+
+
+                                <!-- Hidden if academic track is chosen -->
+                                <div id="specialization-container" class="hidden">
+                                    <label for="specialization" class="block mb-2 font-medium">Specialization</label>
+                                    <input type="text" name="specialization" id="specialization"
+                                           class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
+                                           placeholder="Enter specialization">
+                                </div>
+
 
                                 <div>
                                     <label for="category" class="block mb-2 font-medium">Select Subject Category</label>
@@ -119,6 +166,9 @@
             <thead class="bg-gradient-to-r from-[#223a5e] to-[#2c4b7b] text-white">
                 <tr>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Semester</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Track</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Strand</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider">Specialization</th>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Category</th>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Subject Name</th>
                     <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Subject Description</th>
@@ -130,6 +180,15 @@
                     <tr class="hover:bg-gray-50 transition duration-200 ease-in-out">
                         <td class="px-4 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $subject->semester }}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ $subject->track }}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ $subject->strand }}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 text-center">{{ $subject->specialization }}</div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $subject->category }}</div>
@@ -253,6 +312,49 @@
                     if ($(this).val().trim() === "") {
                         $('#subjects-search-form').submit();
                     }
+                });
+
+                // Add this event listener for track selection
+                $('#track').on('change', function () {
+                    let selectedTrack = $(this).val();
+                    if (selectedTrack === 'TVL Track') {
+                        $('#specialization-container').show();
+                    } else {
+                        $('#specialization-container').hide();
+                        $('#specialization').val(''); // Clear the specialization input if hiding
+                    }
+                });
+
+                // Optional: Reset specialization container when modal is opened
+                $('#staticBackdrop').on('show.bs.modal', function () {
+                    $('#specialization-container').hide();
+                    $('#specialization').val('');
+                    $('#track').val(''); // Reset track selection
+                });
+
+                // Filtering functionality for the dropdown filter
+                $('#sort-strand').on('change', function() {
+                    // Prepare form data
+                    let formData = {};
+
+                    // Add search input if exists
+                    let searchVal = $('#search-subject').val().trim();
+                    if (searchVal) {
+                        formData['searchSubject'] = searchVal;
+                    }
+
+                    // Add strand filter if not 'All Strands'
+                    let strandVal = $(this).val();
+                    if (strandVal) {
+                        formData['sort_by_strand'] = strandVal;
+                    }
+
+                    // Construct URL with query parameters
+                    let baseUrl = window.location.pathname;
+                    let queryString = $.param(formData);
+
+                    // Redirect with new parameters
+                    window.location.href = baseUrl + (queryString ? '?' + queryString : '');
                 });
             });
 

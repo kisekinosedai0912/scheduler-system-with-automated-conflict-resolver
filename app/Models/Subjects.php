@@ -12,6 +12,9 @@ class Subjects extends Model
 
     protected $fillable = [
         'semester',
+        'track',
+        'strand',
+        'specialization',
         'category',
         'subjectName',
         'description'

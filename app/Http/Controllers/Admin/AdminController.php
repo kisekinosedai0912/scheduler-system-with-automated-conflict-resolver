@@ -5,12 +5,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\Events;
 use App\Models\Schedules;
-use Illuminate\Http\Request;
 use App\Models\Subjects;
 use App\Models\Teachers;
 use App\Models\Notifications;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -138,38 +140,55 @@ class AdminController extends Controller
             $query->where('subjectName', 'LIKE', "%{$search}%");
         }
 
-        $paginateSubjects = $query->paginate(7);
+        if ($request->has('sort_by_strand') && $request->input('sort_by_strand') !== '') {
+            $query->where('strand', $request->input('sort_by_strand'));
+        }
 
-        return view('admin.subjects', compact('paginateSubjects')); // The same as the previous ones
+        $paginateSubjects = $query->paginate(7);
+        $uniqueStrands = Subjects::distinct('strand')->pluck('strand');
+
+        return view('admin.subjects', compact('paginateSubjects', 'uniqueStrands'));
     }
 
     // Function for creating subjects in the database
     public function createSubject(Request $request) {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'semester' => 'required|string',
+            'track' => 'required|string',
+            'strand' => 'required|string',
+            'specialization' => 'nullable|string|max:255',
             'category' => 'required|string',
-            'subjectName' => 'required|string',
-            'description' => 'nullable|string'
+            'subjectName' => [
+                'required',
+                'string',
+                Rule::unique('subjects', 'subjectName')
+                    ->where('semester', $request->input('semester'))
+                    ->where('specialization', $request->input('specialization'))
+            ],
+            'description' => 'nullable|string|max:500'
         ]);
 
-        try {
-            // Check if a subject with the same name and semester already exists
-            $existingSubject = Subjects::where('subjectName', $data['subjectName'])
-                ->where('semester', $data['semester'])
-                ->first();
-
-            // If an existing subject is found, return with an error message
-            if ($existingSubject) {
-                return redirect()->back()->with('error', 'Subject already exists, cannot add duplicate ones');
-            }
-
-            Subjects::create($data);
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        // Conditional validation for TVL Track
+        if ($request->input('track') === 'TVL Track') {
+            $validator->sometimes('specialization', 'required|string|max:255', function () {
+                return true;
+            });
         }
 
-        return redirect()->route('admin.subjects')->with('success', 'Subject added successfully!');
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $subject = Subjects::create($validator->validated());
+
+            return redirect()->route('admin.subjects')->with('success', 'Subject added successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Subject Creation Error: ' . $e->getMessage());
+            return back()->with('error', 'An unexpected error occurred');
+        }
     }
 
     // Function for showing modal form for editing of fields in the table
@@ -178,23 +197,45 @@ class AdminController extends Controller
     }
 
     // Function for updating the specific subject in the table
-    public function updateSubject(Request $request, Subjects $subject)
-    {
-        $data = $request->validate([
+    public function updateSubject(Request $request, Subjects $subject) {
+        $validator = Validator::make($request->all(), [
             'semester' => 'required|string',
+            'track' => 'required|string',
+            'strand' => 'required|string',
+            'specialization' => 'nullable|string|max:255',
             'category' => 'required|string',
-            'subjectName' => 'required|string',
-            'description' => 'nullable|string',
+            'subjectName' => [
+                'required',
+                'string',
+                Rule::unique('subjects', 'subjectName')
+                    ->where('semester', $request->input('semester'))
+                    ->where('specialization', $request->input('specialization'))
+                    ->ignore($subject->id)  // Ignore the current subject's ID
+            ],
+            'description' => 'nullable|string|max:500'
         ]);
 
-        try {
-            $subject->update($data);
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        // Conditional validation for TVL Track
+        if ($request->input('track') === 'TVL Track') {
+            $validator->sometimes('specialization', 'required|string|max:255', function () {
+                return true;
+            });
         }
 
-        return redirect()->back()->with('success', 'Subject updated successfully!');
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $subject->update($validator->validated());
+
+            return redirect()->route('admin.subjects')->with('success', 'Subject updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Subject Update Error: ' . $e->getMessage());
+            return back()->with('error', 'An unexpected error occurred during update');
+        }
     }
 
     // Function for deleting the specific id of the subject in the database

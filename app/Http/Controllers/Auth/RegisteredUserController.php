@@ -45,6 +45,6 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        return redirect(route('register', absolute: false));
+        return redirect(route('login', absolute: false));
     }
 }

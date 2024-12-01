@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Classroom;
 use App\Models\Events;
 use App\Models\Schedules;
@@ -16,13 +17,26 @@ use Carbon\Carbon;
 class ConflictController extends Controller
 {
     // Function for returning view in the schedule page of the admin dashboard
-    public function schedules() {
-        $schedules = Schedules::with(['teacher', 'subject', 'classroom'])->withTrashed()->get();
+    public function schedules(Request $request) {
+        $query = Schedules::with(['teacher', 'subject', 'classroom'])->withTrashed();
+
+        // Semester Filtering
+        if ($request->has('semester') && $request->input('semester') !== '') {
+            $query->whereHas('subject', function($q) use ($request) {
+                $q->where('semester', $request->input('semester'));
+            });
+        }
+
+        // Teacher Filtering (if needed)
+        if ($request->has('teacher') && $request->input('teacher') !== '') {
+            $query->where('teacher_id', $request->input('teacher'));
+        }
+
+        $schedules = $query->get();
 
         // Set is_conflicted attribute for each schedule
         foreach ($schedules as $schedule) {
             $schedule->is_conflicted = $schedule->hasConflict();
-            // \Log::info("Schedule ID: {$schedule->id}, Is Conflicted: {$schedule->is_conflicted}");
         }
 
         $teachers = Teachers::withTrashed()->get();
@@ -48,54 +62,127 @@ class ConflictController extends Controller
             $startTime = $request->input('startTime');
             $endTime = $request->input('endTime');
 
+            // Normalize days input
+            $days = $request->input('days');
+            $days = is_string($days) ? explode(',', $days) : (is_array($days) ? $days : []);
+            $days = array_filter(array_map('trim', $days));
+            $daysString = implode('-', $days);
+
             // Attempt to parse times with multiple formats
             $parsedStartTime = $this->parseTime($startTime);
             $parsedEndTime = $this->parseTime($endTime);
 
-            $request->merge([
-                'startTime' => $parsedStartTime,
-                'endTime' => $parsedEndTime,
-            ]);
-
+            // Check for conflicts
             $hasConflict = $this->checkForConflicts(
                 $request->teacher_id,
                 $parsedStartTime,
                 $parsedEndTime,
-                $schedules->id,
+                $schedules->id, // Pass the current schedule ID to exclude it from conflict check
                 $daysString,
-                $request->input('section') // Pass the section here
+                $request->input('section'),
+                $request->input('room_id')
             );
-            $request->validate([
-                'teacher_id' => 'required',
+
+            try {
+                $parsedStartTime = $this->parseTime($startTime);
+                $parsedEndTime = $this->parseTime($endTime);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid time format: ' . $e->getMessage()
+                ], 422);
+            }
+
+            // Validate request data with parsed times
+            $validator = Validator::make([
+                'teacher_id' => $request->input('teacher_id'),
+                'semester' => $request->input('semester'),
+                'categoryName' => $request->input('categoryName'),
+                'days' => $days,
+                'subject_id' => $request->input('subject_id'),
+                'year' => $request->input('year'),
+                'section' => $request->input('section'),
+                'room_id' => $request->input('room_id'),
+                'startTime' => $parsedStartTime,
+                'endTime' => $parsedEndTime,
+            ], [
+                'teacher_id' => 'required|exists:teachers,id',
                 'semester' => 'required|string',
                 'categoryName' => 'required',
                 'days' => 'required|array',
-                'subject_id' => 'required',
-                // 'studentNum' => 'required',
-                'year' => 'required|string',
+                'subject_id' => 'nullable|exists:subjects,id',
+                'year' => 'required|in:Grade 11,Grade 12',
                 'section' => 'required|string',
-                'room_id' => 'required',
+                'room_id' => 'required|exists:classroom,id',
                 'startTime' => 'required|date_format:H:i:s',
-                'endTime' => 'required|date_format:H:i:s',
+                'endTime' => 'required|date_format:H:i:s|after:startTime',
+            ], [
+                'year.in' => 'Please select either Grade 11 or Grade 12.',
+                'startTime.date_format' => 'Invalid start time format. Use HH:mm:ss',
+                'endTime.date_format' => 'Invalid end time format. Use HH:mm:ss',
+                'endTime.after' => 'End time must be after start time.',
             ]);
 
-            $days = implode('-', $request->input('days', []));
+            // Check validation first
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Handle conflicts
+            if ($hasConflict) {
+                // Fetch additional details for conflict response
+                $teacher = Teachers::findOrFail($request->input('teacher_id'));
+                $subject = Subjects::findOrFail($request->input('subject_id', null));
+
+                // Get available time slots
+                $availableSlots = $this->getAvailableTimeSlots(
+                    $request->teacher_id,
+                    $days,
+                    $parsedStartTime,
+                    $parsedEndTime
+                );
+
+                // Return conflict response
+                return response()->json([
+                    'status' => 'conflict',
+                    'message' => 'Schedule conflicts with existing schedules.',
+                    'available_slots' => $availableSlots,
+                    'original_schedule' => [
+                        'id' => $schedules->id,
+                        'teacher_id' => $teacher->id,
+                        'teacher_name' => $teacher->teacherName,
+                        'semester' => $request->input('semester'),
+                        'category_name' => $request->input('categoryName'),
+                        'subject_id' => $subject->id ?? null,
+                        'subject_name' => $subject->subjectName ?? null,
+                        'room_id' => $request->input('room_id'),
+                        'year_section' => $request->input('year'),
+                        'section' => $request->input('section'),
+                        'days' => $daysString,
+                        'start_time' => $parsedStartTime,
+                        'end_time' => $parsedEndTime,
+                    ]
+                ], 409);
+            }
 
             // Storing the old duration to adjust teacher's hours
             $oldStartTime = \Carbon\Carbon::parse($schedules->startTime);
             $oldEndTime = \Carbon\Carbon::parse($schedules->endTime);
             $oldDuration = $oldStartTime->diffInHours($oldEndTime, true);
 
+            // Update the schedule
             $schedules->update([
                 'teacher_id' => $request->input('teacher_id'),
                 'semester' => $request->input('semester'),
                 'categoryName' => $request->input('categoryName'),
                 'subject_id' => $request->input('subject_id'),
                 'room_id' => $request->input('room_id'),
-                // 'studentNum' => $request->input('studentNum'),
                 'year' => $request->input('year'),
                 'section' => $request->input('section'),
-                'days' => $days,
+                'days' => $daysString,
                 'startTime' => $parsedStartTime,
                 'endTime' => $parsedEndTime,
             ]);
@@ -112,9 +199,23 @@ class ConflictController extends Controller
                 $teacher->save();
             }
 
-            // Check for conflicts after creating the schedule
+            // Check for conflicts after updating the schedule
             $schedules->is_conflicted = $hasConflict;
             $schedules->save();
+
+            // Determine the response type
+            if ($request->expectsJson() || $request->ajax()) {
+                // JSON response for AJAX/API requests
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Schedule updated successfully',
+                    'schedule' => $schedules->load(['teacher', 'subject', 'classroom'])
+                ], 200);
+            } else {
+                // Web response for traditional form submissions
+                return redirect()->route('admin.schedules')
+                    ->with('success', 'Schedule updated successfully');
+            }
 
         } catch (\Exception $e) {
             \Log::error('Schedule update error', [
@@ -123,188 +224,163 @@ class ConflictController extends Controller
                 'request_data' => $request->all()
             ]);
 
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            // Return a JSON response with error details
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
-
-        return redirect()->back()->with('success', 'Schedule updated successfully!');
     }
 
     // Function for creating schedules
     public function createSchedule(Request $request) {
-        // For Debugging: Loggin the incoming request data
-        \Log::info('Create Schedule Request Data', [
+        \Log::info('Create Schedule Request', [
             'all_data' => $request->all(),
-            'selected_slots' => $request->input('selected_slots'),
-            'days' => $request->input('days')
+            'method' => $request->method()
         ]);
 
         try {
-            // Ensure days is an array
+            // Normalize days input
             $days = $request->input('days');
-            if (is_string($days)) {
-                $days = explode(',', $days); // Change from '-' to ',' if using multi-select
-            }
-
-            // Validate that days is an array
-            if (!is_array($days)) {
-                throw new \Exception("The days field must be an array.");
-            }
-
-            // Normalize days array (trim and remove spaces & empty values)
+            $days = is_string($days) ? explode(',', $days) : (is_array($days) ? $days : []);
             $days = array_filter(array_map('trim', $days));
-            \Log::info('Processed Days', ['days' => $days]);
 
             if (empty($days)) {
                 throw new \Exception("Please select at least one day.");
             }
 
+            // Parse time in a uniform format
             $startTime = $request->input('startTime');
             $endTime = $request->input('endTime');
 
-           // If selected slots are provided, override days and times
-            if ($request->has('selected_slots')) {
-                $selectedSlots = json_decode($request->input('selected_slots'), true);
-
-                if (!empty($selectedSlots)) {
-                    // Extract days from selected slots
-                    $days = array_column($selectedSlots, 'day');
-
-                    // Use the first slot's time
-                    $startTime = $selectedSlots[0]['startTime'];
-                    $endTime = $selectedSlots[0]['endTime'];
-
-                    // Reparse times if needed
-                    $parsedStartTime = $this->parseTime($startTime);
-                    $parsedEndTime = $this->parseTime($endTime);
-
-                    // Update request with new days and times
-                    $request->merge([
-                        'days' => $days,
-                        'startTime' => $parsedStartTime,
-                        'endTime' => $parsedEndTime,
-                    ]);
-                }
-            }
-
-            // Attempt to parse times with multiple formats
             $parsedStartTime = $this->parseTime($startTime);
             $parsedEndTime = $this->parseTime($endTime);
 
-            // Convert days array to be seperated by a hyphen/dash when storing in the database
+            // Prepare days string for database storage
             $daysString = implode('-', $days);
 
-            // Merge parsed data back into request
-            $request->merge([
-                'days' => $days,
-                'startTime' => $parsedStartTime,
-                'endTime' => $parsedEndTime,
-            ]);
-
-            // Validate before checking conflicts
-            $request->validate([
+            // Validate request data
+            $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:teachers,id',
                 'semester' => 'required|string',
                 'categoryName' => 'required',
-                'days' => 'required|array|min:1',
-                'subject_id' => 'nullable',
-                'year' => [
-                    'required',
-                    'string',
-                    'in:Grade 11,Grade 12'
-                ],
+                'subject_id' => 'nullable|exists:subjects,id',
+                'year' => 'required|in:Grade 11,Grade 12',
                 'section' => 'required|string',
-                'room_id' => 'required',
+                'room_id' => 'required|exists:classroom,id',
                 'startTime' => 'required|date_format:H:i:s',
                 'endTime' => 'required|date_format:H:i:s',
             ], [
-                'year.required' => 'The year/grade field is required.',
                 'year.in' => 'Please select either Grade 11 or Grade 12.',
             ]);
 
-            // Check for conflicts using the checkForConflicts method
+            // Check validation first
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Check for conflicts
             $hasConflict = $this->checkForConflicts(
                 $request->teacher_id,
                 $parsedStartTime,
                 $parsedEndTime,
-                null, // No exceptId for new schedules
+                null,
                 $daysString,
-                $request->input('section') // Pass the section here
+                $request->input('section'),
+                $request->input('room_id')
             );
 
-            // If there's a conflict and no selected slot, return conflict response
-            if ($hasConflict && !$request->has('selected_slot')) {
-                // Fetch the full teacher and subject details
+            // Handle conflicts
+            if ($hasConflict) {
+                // Fetch additional details for conflict response
                 $teacher = Teachers::findOrFail($request->input('teacher_id'));
-                $subject = Subjects::findOrFail($request->input('subject_id'));
+                $subject = Subjects::findOrFail($request->input('subject_id', null));
 
-                $availableSlots = $this->getAvailableTimeSlots($request->teacher_id, $days, $parsedStartTime, $parsedEndTime);
+                // Get available time slots
+                $availableSlots = $this->getAvailableTimeSlots(
+                    $request->teacher_id,
+                    $days,
+                    $parsedStartTime,
+                    $parsedEndTime
+                );
+
+                // Return conflict response
                 return response()->json([
                     'status' => 'conflict',
                     'message' => 'Schedule conflicts with existing schedules.',
                     'available_slots' => $availableSlots,
                     'original_schedule' => [
-                        'teacher_id' => $request->input('teacher_id'),
-                        'teacher' => [
-                            'id' => $teacher->id,
-                            'teacherName' => $teacher->teacherName
-                        ],
+                        'teacher_id' => $teacher->id,
+                        'teacher_name' => $teacher->teacherName,
                         'semester' => $request->input('semester'),
-                        'categoryName' => $request->input('categoryName'),
-                        'subject_id' => $request->input('subject_id'),
-                        'subject' => [
-                            'id' => $subject->id,
-                            'subjectName' => $subject->subjectName
-                        ],
+                        'category_name' => $request->input('categoryName'),
+                        'subject_id' => $subject->id ?? null,
+                        'subject_name' => $subject->subjectName ?? null,
                         'room_id' => $request->input('room_id'),
-                        'yearSection' => $request->input('yearSection'),
+                        'year_section' => $request->input('year'),
+                        'section' => $request->input('section'),
                         'days' => $daysString,
-                        'startTime' => $parsedStartTime,
-                        'endTime' => $parsedEndTime,
+                        'start_time' => $parsedStartTime,
+                        'end_time' => $parsedEndTime,
                     ]
-                ], 409); // Conflict status code
+                ], 409);
             }
 
-             // Create a single schedule entry for all selected days
-            try {
-                $schedule = Schedules::create([
-                    'teacher_id' => $request->input('teacher_id'),
-                    'semester' => $request->input('semester'),
-                    'categoryName' => $request->input('categoryName'),
-                    'subject_id' => $request->input('subject_id'),
-                    'room_id' => $request->input('room_id'),
-                    'year' => $request->input('year'),
-                    'section' => $request->input('section'),
-                    'days' => $daysString,
-                    'startTime' => $parsedStartTime,
-                    'endTime' => $parsedEndTime,
-                ]);
-
-                // Calculate and update teacher's hours
-                $schedule->calculateAndUpdateTeacherHours();
-
-            } catch (\Exception $e) {
-                \Log::error('Schedule creation error', [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'request_data' => $request->all()
-                ]);
-                return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
-            }
-
-            return redirect()->route('admin.schedules')->with('success', 'Schedule added successfully!');
-
-        } catch (\Exception $e) {
-            \Log::error('Time Parsing Error', [
-                'message' => $e->getMessage(),
-                'start_time' => $startTime ?? 'N/A',
-                'end_time' => $endTime ?? 'N/A',
-                'trace' => $e->getTraceAsString()
+            // Create schedule
+            $schedule = Schedules::create([
+                'teacher_id' => $request->input('teacher_id'),
+                'semester' => $request->input('semester'),
+                'categoryName' => $request->input('categoryName'),
+                'subject_id' => $request->input('subject_id'),
+                'room_id' => $request->input('room_id'),
+                'year' => $request->input('year'),
+                'section' => $request->input('section'),
+                'days' => $daysString,
+                'startTime' => $parsedStartTime,
+                'endTime' => $parsedEndTime,
             ]);
 
+            // Update teacher's hours
+            $schedule->calculateAndUpdateTeacherHours();
+
+            // Determine the response type
+            if ($request->expectsJson() || $request->ajax()) {
+                // JSON response for AJAX/API requests
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Schedule created successfully',
+                    'schedule' => $schedule->load(['teacher', 'subject', 'classroom'])
+                ], 201);
+            } else {
+                return redirect()->route('admin.schedules')
+                    ->with('success', 'Schedule created successfully');
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid time format: ' . $e->getMessage()
-            ], 400);
+                'errors' => $e->validator->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Detailed error logging
+            \Log::error('Schedule Creation Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            // Return a JSON response with error details
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
         }
     }
 
@@ -318,13 +394,12 @@ class ConflictController extends Controller
     private function parseTime($time) {
         // List of possible time formats to try
         $formats = [
-            'H:i A',
-            'H:i:s',
-            'H:i',
-            'h:i A',
-            'h:i:s A',
-            'h:i a',  // Lowercase am/pm
-            'H:i a'   // Additional lowercase format
+            'H:i:s',     // 24-hour with seconds
+            'H:i',       // 24-hour without seconds
+            'h:i A',     // 12-hour with AM/PM
+            'h:i:s A',   // 12-hour with seconds and AM/PM
+            'h:i a',     // Lowercase am/pm
+            'H:i a'      // 24-hour with lowercase am/pm
         ];
 
         // Try parsing with different formats
@@ -333,14 +408,12 @@ class ConflictController extends Controller
                 $parsedTime = Carbon::createFromFormat($format, $time);
                 return $parsedTime->format('H:i:s');
             } catch (\Exception $e) {
-                // Continue to next format
                 continue;
             }
         }
 
-        // If no format works, log the problematic time and throw an exception
-        \Log::warning("Unable to parse time: {$time}");
-        throw new \Exception("Unable to parse time: {$time}");
+        // If no format works, throw an exception with details
+        throw new \Exception("Unable to parse time: {$time}. Supported formats: " . implode(', ', $formats));
     }
 
     // Method to get available time slots for a given day
@@ -467,100 +540,225 @@ class ConflictController extends Controller
         return $this->checkForConflicts($teacherId, $startTime, $endTime, null);
     }
 
-   // Modify the checkForConflicts method to handle multiple days
-    private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null, $section = null)
-    {
-        // Convert days string to array if provided
-        $newScheduleDays = $days ? explode('-', $days) : [];
+    /*
+    // Primary conflict check method for teacher's time and day conflicts
+    private function checkTimeAndDayConflict($teacherId, $startTime, $endTime, $days) {
+        // Convert days to array if needed
+        $newScheduleDays = is_array($days) ? $days : explode('-', $days);
 
-        // Start building the query
-        $conflictingSchedules = Schedules::where('teacher_id', $teacherId)
+        // Check for time and day overlap for the same teacher
+        return Schedules::where('teacher_id', $teacherId)
+            // Time overlap check
             ->where(function($query) use ($startTime, $endTime) {
-                $query->where(function($query) use ($startTime, $endTime) {
-                    // Check if the new schedule overlaps with existing schedules
-                    $query->where('startTime', '<', $endTime)
-                        ->where('endTime', '>', $startTime);
-                });
-            });
-
-        // Exclude the current schedule if provided
-        if ($exceptId) {
-            $conflictingSchedules->where('id', '!=', $exceptId);
-        }
-
-        // Get the conflicting schedules
-        $conflicts = $conflictingSchedules->get();
-
-        // If no specific days are provided, return false if there are no conflicts
-        if (empty($newScheduleDays)) {
-            return $conflicts->isNotEmpty();
-        }
-
-        // Check if any of the conflicting schedules occur on the same day
-        foreach ($conflicts as $conflict) {
-            $conflictDays = explode('-', $conflict->days);
-
-            // Check for day conflicts
-            foreach ($newScheduleDays as $newDay) {
-                if (in_array($newDay, $conflictDays)) {
-                    // If section is provided, check for section match
-                    if ($section === null || $conflict->section === $section) {
-                        return true; // Conflict found
-                    }
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            // Day overlap check
+            ->where(function($dayQuery) use ($newScheduleDays) {
+                foreach ($newScheduleDays as $day) {
+                    $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
                 }
+            })
+            ->exists();
+    }
+
+    // Separate method for same section conflict
+    private function checkSameSectionConflict($teacherId, $section, $startTime, $endTime, $days) {
+        // Convert days to array if needed
+        $newScheduleDays = is_array($days) ? $days : explode('-', $days);
+
+        // Check for conflicts in the same section
+        return Schedules::where('section', $section)
+            // Time overlap check
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            // Day overlap check
+            ->where(function($dayQuery) use ($newScheduleDays) {
+                foreach ($newScheduleDays as $day) {
+                    $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
+                }
+            })
+            // Exclude the current teacher
+            ->where('teacher_id', '!=', $teacherId)
+            ->exists();
+    }
+
+    // Modify your existing checkForConflicts method to use these new methods
+    private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null, $section = null, $roomId = null) {
+        // Check for teacher's own time and day conflicts
+        $teacherConflict = $this->checkTimeAndDayConflict($teacherId, $startTime, $endTime, $days);
+        if ($teacherConflict) {
+            \Log::info('Teacher Time and Day Conflict', [
+                'teacher_id' => $teacherId,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'days' => $days
+            ]);
+            return true;
+        }
+
+        // Check for same section conflicts with other teachers
+        if ($section) {
+            $sectionConflict = $this->checkSameSectionConflict($teacherId, $section, $startTime, $endTime, $days);
+            if ($sectionConflict) {
+                \Log::info('Section Conflict', [
+                    'teacher_id' => $teacherId,
+                    'section' => $section,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'days' => $days
+                ]);
+                return true;
             }
         }
 
-        return false; // No conflicts found
+        // Optional: Room conflict check
+        if ($roomId) {
+            $roomConflict = Schedules::where('room_id', $roomId)
+                ->where(function($query) use ($startTime, $endTime) {
+                    $query->where('startTime', '<', $endTime)
+                        ->where('endTime', '>', $startTime);
+                })
+                ->where(function($dayQuery) use ($days) {
+                    $newScheduleDays = is_array($days) ? $days : explode('-', $days);
+                    foreach ($newScheduleDays as $day) {
+                        $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
+                    }
+                })
+                ->exists();
+
+            if ($roomConflict) {
+                \Log::info('Room Conflict', [
+                    'room_id' => $roomId,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'days' => $days
+                ]);
+                return true;
+            }
+        }
+
+        return false;
+    }
+    */
+
+    private function checkTimeAndDayConflict($teacherId, $startTime, $endTime, $days, $exceptId = null) {
+        // Convert days to array if needed
+        $newScheduleDays = is_array($days) ? $days : explode('-', $days);
+
+        // Check for time and day overlap for the same teacher
+        $query = Schedules::where('teacher_id', $teacherId)
+            // Time overlap check
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            // Day overlap check
+            ->where(function($dayQuery) use ($newScheduleDays) {
+                foreach ($newScheduleDays as $day) {
+                    $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
+                }
+            });
+
+        // Exclude the current schedule if an ID is provided
+        if ($exceptId !== null) {
+            $query->where('id', '!=', $exceptId);
+        }
+
+        return $query->exists();
     }
 
-    // private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null, $section = null)
-    // {
-    //     // Start building the query
-    //     $conflictingSchedules = Schedules::where('teacher_id', $teacherId)
-    //         ->where(function($query) use ($startTime, $endTime) {
-    //             $query->where(function($query) use ($startTime, $endTime) {
-    //                 // Check if the new schedule overlaps with existing schedules
-    //                 $query->where(function($query) use ($startTime, $endTime) {
-    //                     $query->where('startTime', '<', $endTime) // Existing starts before new ends
-    //                         ->where('endTime', '>', $startTime); // Existing ends after new starts
-    //                 });
-    //             });
-    //         });
+    private function checkSameSectionConflict($teacherId, $section, $startTime, $endTime, $days, $exceptId = null) {
+        // Convert days to array if needed
+        $newScheduleDays = is_array($days) ? $days : explode('-', $days);
 
-    //     // Exclude the current schedule if provided
-    //     if ($exceptId) {
-    //         $conflictingSchedules->where('id', '!=', $exceptId);
-    //     }
+        // Check for conflicts in the same section
+        $query = Schedules::where('section', $section)
+            // Time overlap check
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->where('startTime', '<', $endTime)
+                    ->where('endTime', '>', $startTime);
+            })
+            // Day overlap check
+            ->where(function($dayQuery) use ($newScheduleDays) {
+                foreach ($newScheduleDays as $day) {
+                    $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
+                }
+            })
+            // Exclude the current teacher
+            ->where('teacher_id', '!=', $teacherId);
 
-    //     // Get the conflicting schedules
-    //     $conflicts = $conflictingSchedules->get();
+        // Exclude the current schedule if an ID is provided
+        if ($exceptId !== null) {
+            $query->where('id', '!=', $exceptId);
+        }
 
-    //     // If no specific days are provided, return false if there are no conflicts
-    //     if (is_null($days)) {
-    //         return $conflicts->isNotEmpty();
-    //     }
+        return $query->exists();
+    }
 
-    //     // Split the provided days into an array
-    //     $newScheduleDays = explode('-', $days);
+    private function checkForConflicts($teacherId, $startTime, $endTime, $exceptId = null, $days = null, $section = null, $roomId = null) {
+        // Check for teacher's own time and day conflicts
+        $teacherConflict = $this->checkTimeAndDayConflict($teacherId, $startTime, $endTime, $days, $exceptId);
+        if ($teacherConflict) {
+            \Log::info('Teacher Time and Day Conflict', [
+                'teacher_id' => $teacherId,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'days' => $days
+            ]);
+            return true;
+        }
 
-    //     // Check if any of the conflicting schedules occur on the same day
-    //     foreach ($conflicts as $conflict) {
-    //         $conflictDays = explode('-', $conflict->days);
+        // Check for same section conflicts with other teachers
+        if ($section) {
+            $sectionConflict = $this->checkSameSectionConflict($teacherId, $section, $startTime, $endTime, $days, $exceptId);
+            if ($sectionConflict) {
+                \Log::info('Section Conflict', [
+                    'teacher_id' => $teacherId,
+                    'section' => $section,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'days' => $days
+                ]);
+                return true;
+            }
+        }
 
-    //         // Check for day conflicts
-    //         foreach ($newScheduleDays as $newDay) {
-    //             if (in_array($newDay, $conflictDays)) {
-    //                 // Check if the section is the same
-    //                 if ($conflict->section === $section) {
-    //                     return true; // If conflict found
-    //                 }
-    //             }
-    //         }
-    //     }
+        // Optional: Room conflict check
+        if ($roomId) {
+            $roomConflict = Schedules::where('room_id', $roomId)
+                ->where(function($query) use ($startTime, $endTime) {
+                    $query->where('startTime', '<', $endTime)
+                        ->where('endTime', '>', $startTime);
+                })
+                ->where(function($dayQuery) use ($days) {
+                    $newScheduleDays = is_array($days) ? $days : explode('-', $days);
+                    foreach ($newScheduleDays as $day) {
+                        $dayQuery->orWhereRaw("FIND_IN_SET(?, REPLACE(days, '-', ',')) > 0", [$day]);
+                    }
+                })
+                // Exclude the current schedule if an ID is provided
+                ->when($exceptId !== null, function($query) use ($exceptId) {
+                    return $query->where('id', '!=', $exceptId);
+                })
+                ->exists();
 
-    //     return false; // If no conflict found
-    // }
+            if ($roomConflict) {
+                \Log::info('Room Conflict', [
+                    'room_id' => $roomId,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'days' => $days
+                ]);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
 
     // Function for deletion of schedules
