@@ -49,6 +49,7 @@ Route::middleware(['auth', 'adminMiddleware'])->group(function () {
     Route::patch('/admin/{eventId}/drag-drop', [AdminController::class, 'dragEvent'])->name('admin.dragEvent');
 
     Route::get('/admin/print-schedule/{teacherId}', [PrintController::class, 'print'])->name('print');
+    Route::get('/admin/print-classroom', [PrintController::class, 'print_classroom'])->name('print_classroom');
     Route::get('/admin/print-calendar', [EventController::class, 'printCalendar'])->name('print-calendar');
 
     // Route for schedules page

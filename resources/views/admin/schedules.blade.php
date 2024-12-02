@@ -310,9 +310,11 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.all.min.js"></script>
             <script>
                 $(document).ready(function() {
+                    let table;
+
                     // Ensure DataTables is loaded before initializing
                     if ($.fn.DataTable) {
-                        $('#schedulesTable').DataTable({
+                        table = $('#schedulesTable').DataTable({
                             responsive: true,
                             pageLength: 10,
                             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -342,6 +344,20 @@
                     } else {
                         console.error('DataTables not loaded correctly');
                     }
+
+                    // Filter schedules based on selected teacher
+                    $('#teacherSelect').on('change', function() {
+                        const selectedTeacherId = $(this).val();
+                        const selectedTeacherName = $(this).find('option:selected').text();
+
+                        if (!selectedTeacherId) {
+                            // If no teacher is selected, clear the search and redraw the table
+                            table.search('').draw();
+                        } else {
+                            // Filter the table by teacher name
+                            table.column(0).search(selectedTeacherName).draw();
+                        }
+                    });
 
                     $('.timepicker').timepicker({
                         showMeridian: true,
@@ -411,19 +427,6 @@
                         window.location.href = baseUrl + (queryString ? '?' + queryString : '');
                     });
 
-                    // Filter schedules based on selected teacher
-                    $('#teacherSelect').on('change', function() {
-                        const selectedTeacherId = $(this).val();
-                        const selectedTeacherName = $(this).find('option:selected').text();
-
-                        if (!selectedTeacherId) {
-                            table.search('').draw();
-                            window.load();
-                        } else {
-                            table.column(0).search(selectedTeacherName).draw();
-                        }
-                    });
-
                     $('#printButton').on('click', function() {
                         const teacherId = $('#teacherSelect').val();
                         if (teacherId) {
@@ -472,7 +475,7 @@
                         const startTime = formatTimeFor24HourFormat($('#start-time').val());
                         const endTime = formatTimeFor24HourFormat($('#end-time').val());
 
-                        // Create a copy of the form data
+                        // Created a copy of the form data
                         const formData = new FormData(this);
 
                         // Manually set the formatted times

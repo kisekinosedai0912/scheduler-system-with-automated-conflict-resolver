@@ -20,6 +20,23 @@
             </div>
 
             <div class="flex items-center justify-end gap-2">
+                <!-- Month Selection Dropdown -->
+                <select id="month-select" class="form-control mr-2 w-[150px]">
+                    <option value="">All Months</option>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+
                 <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-lg flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="print-button">
                     <span class="font-medium">Print</span>
                     <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -414,26 +431,38 @@
                 });
 
                 // Function to export calendar data in excel file
+                // $('#print-button').on('click', function() {
+                //     // Option 1: Open in a new tab for printing
+                //     window.open("{{ route('print-calendar') }}", '_blank');
+
+                //     // Option 2: If you want to keep the Excel export functionality
+                //     if (events.length > 0) {
+                //         let eventList = events.map(event => ({
+                //             Title: event.title,
+                //             StartDate: moment(event.start).format('YYYY-MM-DD'),
+                //             EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
+                //             StartTime: moment(event.start).format('HH:mm'),
+                //             EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
+                //         }));
+
+                //         // let ws = XLSX.utils.json_to_sheet(eventList);
+                //         // let wb = XLSX.utils.book_new();
+                //         // XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
+                //         // XLSX.writeFile(wb, "Calendar_Events.xlsx");
+                //     } else {
+                //         alert('No events to export.');
+                //     }
+                // });
+
                 $('#print-button').on('click', function() {
-                    // Option 1: Open in a new tab for printing
-                    window.open("{{ route('print-calendar') }}", '_blank');
+                    let selectedMonth = $('#month-select').val();
 
-                    // Option 2: If you want to keep the Excel export functionality
-                    if (events.length > 0) {
-                        let eventList = events.map(event => ({
-                            Title: event.title,
-                            StartDate: moment(event.start).format('YYYY-MM-DD'),
-                            EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
-                            StartTime: moment(event.start).format('HH:mm'),
-                            EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
-                        }));
-
-                        // let ws = XLSX.utils.json_to_sheet(eventList);
-                        // let wb = XLSX.utils.book_new();
-                        // XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
-                        // XLSX.writeFile(wb, "Calendar_Events.xlsx");
+                    // If a specific month is selected, include it in the URL
+                    if (selectedMonth) {
+                        window.open(`{{ route('print-calendar') }}?month=${selectedMonth}`, '_blank');
                     } else {
-                        alert('No events to export.');
+                        // Print all events
+                        window.open("{{ route('print-calendar') }}", '_blank');
                     }
                 });
             });

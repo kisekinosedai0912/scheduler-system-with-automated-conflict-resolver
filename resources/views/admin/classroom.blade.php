@@ -19,20 +19,37 @@
             <input type="search" name="searchRoom" id="search-room" placeholder="Search Classroom" class="w-full h-10 pl-10 pr-4 rounded-md text-gray-900 bg-gray-50 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#223a5e] transition duration-300" value="{{ request('searchRoom') }}">
         </form>
 
-        {{-- Add button with modal trigger --}}
-        <div class="flex items-center justify-end">
-            <button
-                class="group relative w-10 h-10 rounded-full bg-[#223a5e] text-white hover:bg-[#2c4b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] transition duration-300 ease-in-out"
-                title="Add New Classroom"
-                data-bs-toggle="modal"
-                data-bs-target="#classroomModal"
-            >
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                </div>
+        <div class="flex items-center justify-end gap-2">
+            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="printButton">
+                <span class="font-medium">Print</span>
+                <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
+                    viewBox="0 0 24 24"
+                    height="40"
+                    width="40"
+                    class="w-6 h-6"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z" stroke="none"></path>
+                    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                    <path d="M7 11l5 5l5 -5"></path>
+                    <path d="M12 4l0 12"></path>
+                </svg>
             </button>
+
+            {{-- Add button with modal trigger --}}
+            <div class="flex items-center justify-end">
+                <button
+                    class="group relative w-10 h-10 rounded-full bg-[#223a5e] text-white hover:bg-[#2c4b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#223a5e] transition duration-300 ease-in-out"
+                    title="Add New Classroom"
+                    data-bs-toggle="modal"
+                    data-bs-target="#classroomModal"
+                >
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                </button>
+            </div>
         </div>
 
         <!-- Modal -->
@@ -246,6 +263,20 @@
                     if ($(this).val().trim() === "") {
                         $('#search-room-form').submit();
                     }
+                });
+
+                $('#printButton').on('click', function() {
+                    const printWindow = window.open("{{ route('print_classroom') }}", '_blank');
+
+                    // Open the print dialog
+                    printWindow.onload = function() {
+                        printWindow.print();
+
+                        // Close the print dialog if cancelled
+                        printWindow.onafterprint = function() {
+                            printWindow.close();
+                        };
+                    };
                 });
             });
             function confirmDeletion(event, formId) {

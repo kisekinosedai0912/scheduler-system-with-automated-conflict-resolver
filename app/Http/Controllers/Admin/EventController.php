@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class EventController extends Controller
 {
-    public function printCalendar()
+    public function printCalendar(Request $request)
     {
         // Determine the current school year
         $currentYear = now()->year;
@@ -23,19 +23,30 @@ class EventController extends Controller
             ? $currentYear . '-' . ($currentYear + 1)
             : ($currentYear - 1) . '-' . $currentYear;
 
-        // Fetch events for the current school year
-        $events = Events::whereBetween('startDate', [
-            now()->startOfYear(),
-            now()->endOfYear()
-        ])->orderBy('startDate', 'asc')->get();
+        // Base query for events
+        $query = Events::query();
 
-        // You can fetch school name from a configuration or database
-        // $schoolName = config('app.school_name', 'Your School Name');
+        // Check if a specific month is requested
+        $monthFilter = $request->input('month');
+
+        // Apply month filter if provided
+        if ($monthFilter) {
+            $query->whereMonth('startDate', $monthFilter);
+        }
+
+        // Order events by start date
+        $events = $query->orderBy('startDate', 'asc')->get();
+
+        // Determine month name if a specific month is selected
+        $monthName = null;
+        if ($monthFilter) {
+            $monthName = Carbon::create(null, $monthFilter)->format('F');
+        }
 
         return view('admin.print-calendar-events', [
             'events' => $events,
             'schoolYear' => $schoolYear,
-            // 'schoolName' => $schoolName
+            'monthName' => $monthName
         ]);
     }
 }

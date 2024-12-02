@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.Y. {{ $schoolYear }} Calendar of Activities</title>
+    <title>{{ $monthName ? $monthName . ' ' : '' }}Calendar of Events - S.Y. {{ $schoolYear }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -155,19 +155,35 @@
                 </div>
             </div>
             <h2 class="header-title">
-                SENIOR HIGH SCHOOL CALENDAR OF EVENTS <br>(S.Y {{ $schoolYear }})
+                @if(isset($monthName))
+                    {{ $monthName }} CALENDAR OF EVENTS <br>(S.Y {{ $schoolYear }})
+                @else
+                    SENIOR HIGH SCHOOL CALENDAR OF EVENTS <br>(S.Y {{ $schoolYear }})
+                @endif
             </h2>
         </header>
 
         @if($events->isEmpty())
             <div class="no-events">
-                <p>No events scheduled for this school year.</p>
+                <p>
+                    @if($monthName)
+                        No events scheduled for {{ $monthName }}.
+                    @else
+                        No events scheduled for this school year.
+                    @endif
+                </p>
             </div>
         @else
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 70%;">School Year Events</th>
+                        <th style="width: 70%;">
+                            @if($monthName)
+                                {{ $monthName }} Events
+                            @else
+                                School Year Events
+                            @endif
+                        </th>
                         <th style="width: 30%" class="text-right">Date</th>
                     </tr>
                 </thead>
@@ -194,9 +210,64 @@
     </div>
 
     <script>
-        window.onload = function() {
-            window.print();
-        }
+        (function() {
+            // Function to close the page if close is clicked from the page
+            function safeWindowClose() {
+                try {
+                    window.close();
+                } catch (error) {
+                    if (window.opener) {
+                        window.opener.focus();
+                    }
+                    alert('Please close this window manually.');
+                }
+            }
+
+            window.onload = function() {
+                // Check if monthEvents are passed from the parent window
+                if (window.opener && window.opener.monthEvents) {
+                    // Fetch the route for creating and event
+                    fetch("{{ route('print-calendar') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({ monthEvents: window.opener.monthEvents })
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.body.innerHTML = html;
+                        window.print();
+
+                        window.onafterprint = safeWindowClose;
+
+                        setTimeout(function() {
+                            if (!window.matchMedia('print').matches) {
+                                safeWindowClose();
+                            }
+                        }, 500);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        window.print();
+
+                        setTimeout(safeWindowClose, 1000);
+                    });
+                } else {
+                    // Print all events if no specific month to print is selected
+                    window.print();
+
+                    window.onafterprint = safeWindowClose;
+
+                    setTimeout(function() {
+                        if (!window.matchMedia('print').matches) {
+                            safeWindowClose();
+                        }
+                    }, 500);
+                }
+            }
+        })();
     </script>
 </body>
 </html>
