@@ -16,6 +16,7 @@
     <div class="outer-container flex flex-col md:flex-row items-center justify-end">
         <div class="flex items-center justify-between w-full bg-white px-3 py-2 rounded-lg shadow-sm">
             <div class="flex items-center gap-2 w-full">
+                <!-- Teacher sort sort -->
                 <select id="teacherSelect" class="form-control w-[16%]">
                     <option value="">Select Teacher</option>
                     @foreach($teachers as $teacher)
@@ -23,10 +24,21 @@
                     @endforeach
                 </select>
 
+                <!-- Semester sort sort -->
                 <select id="semesterSelect" class="form-control w-[16%]">
                     <option value="">All Semesters</option>
                     <option value="1st semester" {{ request('semester') == '1st semester' ? 'selected' : '' }}>1st Semester</option>
                     <option value="2nd semester" {{ request('semester') == '2nd semester' ? 'selected' : '' }}>2nd Semester</option>
+                </select>
+
+                <!-- Strand sort -->
+                <select id="strandSelect" class="form-control w-[16%]">
+                    <option value="">All Strands</option>
+                    @foreach($subjects->unique('strand') as $subject)
+                        <option value="{{ $subject->strand }}" {{ request('strand') == $subject->strand ? 'selected' : '' }}>
+                            {{ $subject->strand }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
@@ -128,7 +140,7 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <!-- Teacher Dropdown -->
                                 <div>
-                                    <label for="teacher_id" class="block mb-2 font-medium">Select Teacher</label>
+                                    <label for="teacher_id" class="block mb-2 font-medium">Teacher</label>
                                     <select name="teacher_id" id="teacher_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option value="">Select Teacher</option>
                                         @foreach($teachers->unique('teacherName') as $teacher)
@@ -148,9 +160,21 @@
                                     </select>
                                 </div>
 
+                                <!-- Strand Dropdown -->
+                                <div>
+                                    <label for="strand" class="block mb-2 font-medium">Strand</label>
+                                    <select id="strand" name="strand" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                        <option value="">Select Strand</option>
+                                        @foreach($subjects->unique('strand') as $subject)
+                                            <option value="{{ $subject->strand }}">{{ $subject->strand }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+
                                 <!-- Category Dropdown -->
                                 <div>
-                                    <label for="category-select" class="block mb-2 font-medium">Select Category</label>
+                                    <label for="category-select" class="block mb-2 font-medium">Category</label>
                                     <select id="category-select" name="categoryName" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option value="">Select Category</option>
                                         @foreach($subjects->unique('category') as $subject)
@@ -161,7 +185,7 @@
 
                                 <!-- Days Multiselect -->
                                 <div>
-                                    <label for="days" class="block mb-2 font-medium">Select Days</label>
+                                    <label for="days" class="block mb-2 font-medium">Days</label>
                                     <select id="days" name="days[]" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]" multiple>
                                         <option value="M" selected>Monday</option>
                                         <option value="T">Tuesday</option>
@@ -173,7 +197,7 @@
 
                                 <!-- Subject Dropdown -->
                                 <div>
-                                    <label for="subject_id" class="block mb-2 font-medium">Select Subject</label>
+                                    <label for="subject_id" class="block mb-2 font-medium">Subject</label>
                                     <select name="subject_id" id="subject_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option value="">Select Subject</option>
                                         @foreach($subjects->unique('subjectName') as $subject)
@@ -184,7 +208,7 @@
 
                                 <!-- Room Dropdown -->
                                 <div>
-                                    <label for="room_id" class="block mb-2 font-medium">Select Room</label>
+                                    <label for="room_id" class="block mb-2 font-medium">Room</label>
                                     <select name="room_id" id="room_id" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option value="">Select Room</option>
                                         @foreach($classrooms->unique('roomName') as $classroom)
@@ -195,7 +219,7 @@
 
                                 <!-- Year Dropdown -->
                                 <div>
-                                    <label for="year" class="block mb-2 font-medium">Select Year</label>
+                                    <label for="year" class="block mb-2 font-medium">Year</label>
                                     <select name="year" id="year" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option value="">Select Year</option>
                                         <option value="Grade 11">Grade 11</option>
@@ -210,14 +234,18 @@
                                 </div>
 
                                 <!-- Time Inputs -->
-                                <div class="col-span-2 grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label for="start-time" class="block mb-2 font-medium">Start Time</label>
-                                        <input type="text" name="startTime" id="start-time" class="form-control w-full p-2 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e]" placeholder="Start Time (e.g. 02:30 PM)">
+                                        <label for="start-time" class="block mb-2 text-sm font-medium text-gray-700">Start Time</label>
+                                        <input type="text" name="startTime" id="start-time"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e] focus:border-transparent"
+                                            placeholder="Start Time">
                                     </div>
                                     <div>
-                                        <label for="end-time" class="block mb-2 font-medium">End Time</label>
-                                        <input type="text" name="endTime" id="end-time" class="form-control w-full p-2 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e]" placeholder="End Time (e.g. 03:30 PM)">
+                                        <label for="end-time" class="block mb-2 text-sm font-medium text-gray-700">End Time</label>
+                                        <input type="text" name="endTime" id="end-time"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg timepicker focus:outline-none focus:ring-2 focus:ring-[#223a5e] focus:border-transparent"
+                                            placeholder="End Time">
                                     </div>
                                 </div>
                             </div>
@@ -242,6 +270,7 @@
             <tr>
                 <th>Teacher</th>
                 <th>Semester</th>
+                <th>Strand</th>
                 <th>Category</th>
                 <th>Subject</th>
                 <th class="text-center">Room</th>
@@ -260,6 +289,7 @@
                 <tr>
                     <td class="text-md font-light">{{ $schedule->teacher->teacherName }}</td>
                     <td class="text-md font-light">{{ $schedule->semester }}</td>
+                    <td class="text-md font-light">{{ $schedule->strand }}</td>
                     <td class="text-md font-light">{{ $schedule->categoryName }}</td>
                     <td class="text-md font-light">{{ $schedule->subject->subjectName }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->classroom->roomName }}</td>
@@ -345,18 +375,58 @@
                         console.error('DataTables not loaded correctly');
                     }
 
-                    // Filter schedules based on selected teacher
-                    $('#teacherSelect').on('change', function() {
-                        const selectedTeacherId = $(this).val();
-                        const selectedTeacherName = $(this).find('option:selected').text();
+                    // Function to set dropdown values from URL parameters
+                    function setDropdownValuesFromURL() {
+                        // Get URL parameters
+                        const urlParams = new URLSearchParams(window.location.search);
 
-                        if (!selectedTeacherId) {
-                            // If no teacher is selected, clear the search and redraw the table
-                            table.search('').draw();
-                        } else {
-                            // Filter the table by teacher name
-                            table.column(0).search(selectedTeacherName).draw();
+                        // Set teacher dropdown
+                        const teacherId = urlParams.get('teacher');
+                        if (teacherId) {
+                            $('#teacherSelect').val(teacherId);
                         }
+
+                        // Set semester dropdown
+                        const semester = urlParams.get('semester');
+                        if (semester) {
+                            $('#semesterSelect').val(semester);
+                        }
+
+                        // Set strand dropdown
+                        const strand = urlParams.get('strand');
+                        if (strand) {
+                            $('#strandSelect').val(strand);
+                        }
+                    }
+
+                    // Call the function when page loads
+                    setDropdownValuesFromURL();
+
+                    // Modify the filtering event listeners to use a combined approach
+                    function applyFilters() {
+                        let formData = {};
+
+                        // Get values from dropdowns
+                        const teacherVal = $('#teacherSelect').val();
+                        const semesterVal = $('#semesterSelect').val();
+                        const strandVal = $('#strandSelect').val();
+
+                        // Add values to formData if they exist
+                        if (teacherVal) formData['teacher'] = teacherVal;
+                        if (semesterVal) formData['semester'] = semesterVal;
+                        if (strandVal) formData['strand'] = strandVal;
+
+                        // Construct query string
+                        let baseUrl = window.location.pathname;
+                        let queryString = $.param(formData);
+
+                        // Navigate to the URL with all selected filters
+                        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+                    }
+
+                    // Event listeners for dropdowns
+                    $('#teacherSelect, #semesterSelect, #strandSelect').on('change', function() {
+                        applyFilters();
                     });
 
                     $('.timepicker').timepicker({
@@ -427,23 +497,91 @@
                         window.location.href = baseUrl + (queryString ? '?' + queryString : '');
                     });
 
+                    // Strand dropdown sorting event listener
+                    $('#strandSelect').on('change', function() {
+                        let formData = {};
+                        let strandVal = $(this).val();
+
+                        if (strandVal) {
+                            formData['strand'] = strandVal;
+                        }
+
+                        let teacherVal = $('#teacherSelect').val();
+                        if (teacherVal) {
+                            formData['teacher'] = teacherVal;
+                        }
+
+                        let semesterVal = $('#semesterSelect').val();
+                        if (semesterVal) {
+                            formData['semester'] = semesterVal;
+                        }
+
+                        let baseUrl = window.location.pathname;
+                        let queryString = $.param(formData);
+
+                        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+                    });
+
                     $('#printButton').on('click', function() {
                         const teacherId = $('#teacherSelect').val();
-                        if (teacherId) {
-                            const printWindow = window.open(`/admin/print-schedule/${teacherId}`, '_blank');
+                        const semester = $('#semesterSelect').val();
 
-                            printWindow.onload = function() {
-                                printWindow.print();
-
-                                printWindow.onafterprint = function() {
-                                    $('#teacherSelect').val('');
-                                    table.search('').draw();
-                                    printWindow.close();
-                                };
-                            };
-                        } else {
-                            alert('Please select a teacher to print their schedule.');
+                        if (!teacherId || !semester) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Incomplete Selection',
+                                text: 'Please select both a teacher and a semester to print the schedule.',
+                                confirmButtonColor: '#223a5e'
+                            });
+                            return;
                         }
+
+                        // Construct the print URL with query parameters
+                        const printUrl = "{{ route('print') }}" +
+                            `?teacher=${teacherId}&semester=${semester}`;
+
+                        // Open print window
+                        const printWindow = window.open(printUrl, '_blank');
+
+                        // Add error handling
+                        if (!printWindow) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Pop-up Blocked',
+                                text: 'Please allow pop-ups for this website to print schedules.',
+                                confirmButtonColor: '#223a5e'
+                            });
+                            return;
+                        }
+
+                        printWindow.onload = function() {
+                            try {
+                                printWindow.print();
+                            } catch (error) {
+                                console.error('Print error:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Print Error',
+                                    text: 'An error occurred while trying to print the schedule.',
+                                    confirmButtonColor: '#223a5e'
+                                });
+                            }
+
+                            printWindow.onafterprint = function() {
+                                $('#teacherSelect').val('');
+                                $('#semesterSelect').val('');
+                                printWindow.close();
+                            };
+                        };
+
+                        printWindow.onerror = function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Print Error',
+                                text: 'Unable to open print window. Please check your browser settings.',
+                                confirmButtonColor: '#223a5e'
+                            });
+                        };
                     });
 
                     // Time formatting function
@@ -626,6 +764,7 @@
                             const requiredFields = [
                                 'teacher_id',
                                 'semester',
+                                'strand',
                                 'categoryName',
                                 'subject_id',
                                 'room_id',

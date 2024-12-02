@@ -53,9 +53,9 @@
                 </button>
 
                 {{-- For large screens button --}}
-                <button class="buttonDownload rounded-md hidden md:block" id="print-button">Export to excel</button>
+                {{-- <button class="buttonDownload rounded-md hidden md:block" id="print-button">Export to excel</button> --}}
                 {{-- For mobile button --}}
-                <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button>
+                {{-- <button class="buttonDownload rounded-md block md:hidden" id="print-button">Export</button> --}}
             </div>
         </div>
     </div>

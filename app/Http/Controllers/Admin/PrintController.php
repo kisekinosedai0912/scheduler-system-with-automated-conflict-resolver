@@ -11,23 +11,45 @@ use Carbon\Carbon;
 
 class PrintController extends Controller
 {
-    public function print($teacherId){
-        $teacher = Teachers::findOrFail($teacherId);
-        $schedules = Schedules::where('teacher_id', $teacherId)->get();
+    public function print(Request $request) {
+        // Validate input
+        $request->validate([
+            'teacher' => 'required|exists:teachers,id',
+            'semester' => 'required|string'
+        ]);
 
+        // Fetch schedules with all necessary relationships
+        $schedules = Schedules::with(['teacher', 'subject', 'classroom'])
+            ->where('teacher_id', $request->input('teacher'))
+            ->whereHas('subject', function($query) use ($request) {
+                $query->where('semester', $request->input('semester'));
+            })
+            ->get();
+
+        // If no schedules found
         if ($schedules->isEmpty()) {
-            return redirect()->back()->with('error', 'No schedules found for this teacher.');
+            return view('errors.no-schedules', [
+                'message' => 'No schedules found for the selected teacher and semester.'
+            ]);
         }
 
-        // Determine year and semester from the first schedule
-        $year = $schedules->first()->year;
-        $semester = $schedules->first()->semester;
+        // Get teacher details
+        $teacher = Teachers::findOrFail($request->input('teacher'));
 
-        // Get current school year
+        // Determine year and school year
+        $year = $schedules->first()->year ?? 'N/A';
+        $semester = $request->input('semester');
         $currentYear = Carbon::now()->year;
         $schoolYear = $currentYear . '-' . ($currentYear + 1);
 
-        return view('admin.schedule-print', compact('schedules', 'year', 'semester', 'teacher', 'schoolYear'));
+        // Return print view
+        return view('admin.schedule-print', compact(
+            'schedules',
+            'teacher',
+            'year',
+            'semester',
+            'schoolYear'
+        ));
     }
 
     public function print_classroom() {

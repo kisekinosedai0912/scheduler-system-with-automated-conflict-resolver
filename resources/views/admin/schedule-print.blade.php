@@ -136,5 +136,17 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        window.onafterprint = function() {
+            window.close();
+        };
+
+        window.addEventListener('beforeunload', function() {
+            window.opener.focus();
+        });
+
+        window.print();
+    </script>
 </body>
 </html>

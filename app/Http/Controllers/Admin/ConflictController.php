@@ -27,7 +27,14 @@ class ConflictController extends Controller
             });
         }
 
-        // Teacher Filtering (if needed)
+        // Strand Filtering
+        if ($request->has('strand') && $request->input('strand') !== '') {
+            $query->whereHas('subject', function($q) use ($request) {
+                $q->where('strand', $request->input('strand'));
+            });
+        }
+
+        // Teacher Filtering
         if ($request->has('teacher') && $request->input('teacher') !== '') {
             $query->where('teacher_id', $request->input('teacher'));
         }
@@ -97,6 +104,7 @@ class ConflictController extends Controller
             $validator = Validator::make([
                 'teacher_id' => $request->input('teacher_id'),
                 'semester' => $request->input('semester'),
+                'strand' => $request->input('strand'),
                 'categoryName' => $request->input('categoryName'),
                 'days' => $days,
                 'subject_id' => $request->input('subject_id'),
@@ -108,6 +116,7 @@ class ConflictController extends Controller
             ], [
                 'teacher_id' => 'required|exists:teachers,id',
                 'semester' => 'required|string',
+                'strand' => 'required|string',
                 'categoryName' => 'required',
                 'days' => 'required|array',
                 'subject_id' => 'nullable|exists:subjects,id',
@@ -177,6 +186,7 @@ class ConflictController extends Controller
             $schedules->update([
                 'teacher_id' => $request->input('teacher_id'),
                 'semester' => $request->input('semester'),
+                'strand' => $request->input('strand'),
                 'categoryName' => $request->input('categoryName'),
                 'subject_id' => $request->input('subject_id'),
                 'room_id' => $request->input('room_id'),
@@ -264,6 +274,7 @@ class ConflictController extends Controller
             $validator = Validator::make($request->all(), [
                 'teacher_id' => 'required|exists:teachers,id',
                 'semester' => 'required|string',
+                'strand' => 'required|string',
                 'categoryName' => 'required',
                 'subject_id' => 'nullable|exists:subjects,id',
                 'year' => 'required|in:Grade 11,Grade 12',
@@ -334,6 +345,7 @@ class ConflictController extends Controller
             $schedule = Schedules::create([
                 'teacher_id' => $request->input('teacher_id'),
                 'semester' => $request->input('semester'),
+                'strand' => $request->input('strand'),
                 'categoryName' => $request->input('categoryName'),
                 'subject_id' => $request->input('subject_id'),
                 'room_id' => $request->input('room_id'),
