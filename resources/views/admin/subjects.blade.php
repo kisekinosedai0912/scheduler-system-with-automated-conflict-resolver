@@ -111,7 +111,7 @@
 
 
                                 <div>
-                                    <label for="category" class="block mb-2 font-medium">Select Subject Category</label>
+                                    <label for="category" class="block mb-2 font-medium">Subject Category</label>
                                     <select name="category" id="category" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                         <option disabled selected value="">Select Subject Category</option>
                                         <option value="Grade-11 Subjects">Grade-11 Subjects</option>
@@ -120,7 +120,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="subject-name" class="block mb-2 font-medium">Subject Name</label>
+                                    <label for="subject-name" class="block mb-2 font-medium">Subject</label>
                                     <input type="text"
                                         class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]"
                                         name="subjectName"

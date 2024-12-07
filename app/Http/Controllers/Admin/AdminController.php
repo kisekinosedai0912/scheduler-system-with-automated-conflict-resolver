@@ -14,6 +14,16 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
+use App\Services\SMSService;
+use Infobip\Api\SmsApi;
+use Illuminate\Support\Facades\Log;
+use Infobip\Configuration;
+use Infobip\ApiException;
+use Infobip\Model\SmsAdvancedTextualRequest;
+use Infobip\Model\SmsDestination;
+use Infobip\Model\SmsTextualMessage;
+
+
 class AdminController extends Controller
 {
     // Function for returning view in the home page of the admin dashboard
@@ -36,9 +46,7 @@ class AdminController extends Controller
 
     // Function for creating events
     public function createEvent(Request $request) {
-        // Trial and error logic before creating an event in the calendar
         try {
-            // Validating the incoming value of the form elements before querying to creation
             $request->validate([
                 'title' => 'required|string',
                 'start' => 'required|date_format:Y-m-d\TH:i:s',
@@ -47,33 +55,141 @@ class AdminController extends Controller
                 'endTime' => 'required|date_format:H:i|after:startTime',
             ]);
 
-            $startDateTime = Carbon::parse($request->input('start')); // Parse the start date and time before creation
-            $endDateTime = Carbon::parse($request->input('end')); // Parse the end date and time before creation
+            $startDateTime = Carbon::parse($request->input('start'));
+            $endDateTime = Carbon::parse($request->input('end'));
 
             $event = Events::create([
                 'eventTitle' => $request->input('title'),
-                'startDate' => $startDateTime->toDateString(), // Convert to string before storing in the database table
+                'startDate' => $startDateTime->toDateString(),
                 'endDate' => $endDateTime->toDateString(),
                 'startTime' => $startDateTime->toTimeString(),
                 'endTime' => $endDateTime->toTimeString(),
             ]);
 
-            // Create notifications for all faculty members
+            // Create notifications for faculty members
             $facultyMembers = User::where('user_role', 'faculty')->get();
+            $notifications = [];
             foreach ($facultyMembers as $faculty) {
-                Notifications::create([
+                $notifications[] = [
                     'event_id' => $event->id,
                     'user_id' => $faculty->id,
                     'is_read' => false,
-                ]);
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
             }
 
-            return response()->json(['success' => 'Event created successfully']); // Return a json response and display a success message if successful
+            // Bulk insert notifications
+            if (!empty($notifications)) {
+                Notifications::insert($notifications);
+            }
+
+            // SMS Configuration
+            $baseUrl = config('services.infobip.base_url');
+            $apiKey = config('services.infobip.api_key');
+            $senderId = config('services.infobip.sender_id', 'SCSHSAdmin');
+
+            // Prepare SMS Configuration
+            $configuration = new Configuration(
+                host: $baseUrl,
+                apiKey: $apiKey
+            );
+
+            // Initialize SMS API
+            $sendSmsApi = new SmsApi(config: $configuration);
+
+            // Fetch all contact numbers from the Teachers model
+            $contactNum = Teachers::whereNotNull('contact')
+                ->pluck('contact')
+                ->filter(function($number) {
+                    // Validate and format phone numbers
+                    return $this->formatPhoneNumber($number);
+                })
+                ->toArray();
+
+            // Prepare message
+            $messageText = "A new event '{$event->eventTitle}' has been scheduled from {$startDateTime->toDateTimeString()} to {$endDateTime->toDateTimeString()}.";
+
+            // Prepare destinations for SMS
+            $destinations = array_map(function($number) {
+                return new SmsDestination(to: $number);
+            }, $contactNum);
+
+            // Check if we have any valid destinations
+            if (empty($destinations)) {
+                Log::warning('No valid phone numbers found for SMS');
+                return redirect()->route('admin.schedules')->with('warning', 'Event created but no SMS sent due to invalid phone numbers');
+            }
+
+            // Create SMS message
+            $message = new SmsTextualMessage(
+                destinations: $destinations,
+                from: $senderId,
+                text: $messageText
+            );
+
+            $smsRequest = new SmsAdvancedTextualRequest(messages: [$message]);
+
+            try {
+                // Send SMS
+                $smsResponse = $sendSmsApi->sendSmsMessage($smsRequest);
+
+                // Log successful SMS sending
+                Log::info('SMS Sent Successfully', [
+                    'event_id' => $event->id,
+                    'event' => $event->eventTitle,
+                    'destinations' => $contactNum
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Event created and SMS sent successfully',
+                    'event' => $event
+                ]);
+
+            } catch (ApiException $apiException) {
+                // Log SMS sending failure
+                Log::error('SMS Sending Failed', [
+                    'event_id' => $event->id,
+                    'error_message' => $apiException->getMessage(),
+                    'error_code' => $apiException->getCode()
+                ]);
+
+                return redirect()->route('admin.schedules')->with('warning', 'Event created but SMS sending failed: ' . $apiException->getMessage());
+            }
+
         } catch (\Exception $e) {
-            \Log::error('Event creation error: ' . $e->getMessage());
-            // Return a json response for the exception with an error message
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            // Log unexpected errors
+            Log::error('Event creation error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->with('error', 'An unexpected error occurred: ' . $e->getMessage());
         }
+    }
+
+    private function formatPhoneNumber($number) {
+        // Remove any non-digit characters
+        $phone = preg_replace('/\D/', '', $number);
+
+        // Ensure the number starts with 63 and is 12 digits long
+        if (strpos($phone, '63') === 0 && strlen($phone) === 12) {
+            return '+' . $phone;
+        }
+
+        // If number starts with 09, convert to +63
+        if (strpos($phone, '09') === 0) {
+            $phone = '63' . substr($phone, 2);
+            if (strlen($phone) === 12) {
+                return '+' . $phone;
+            }
+        }
+
+        // Log invalid phone number
+        Log::warning('Invalid Phone Number', ['number' => $number]);
+
+        return null;
     }
 
     // Function for resizing events in the calendar
@@ -275,21 +391,66 @@ class AdminController extends Controller
 
     // Function for adding new teacher loads
     public function createLoad(Request $request) {
+        $contactInput = preg_replace('/\D/', '', $request->input('contact'));
+        $request->merge(['contact' => $contactInput]);
+
         $loadData = $request->validate([
             'teacherName' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:teachers,email',
-            'contact' => 'required|string|max:15',
+            'contact' => [
+                'required',
+                'string',
+                'min:10',
+                'max:13',
+                'regex:/^(09|\+639|639)\d{9}$/'
+            ],
+            [
+                'teacherName.regex' => 'Teacher name should only contain letters, spaces, and periods.',
+                'contact.regex' => 'Please enter a valid Philippine mobile number (09/+639/639 format).',
+                'contact.min' => 'Mobile number must be at least 10 digits.',
+                'contact.max' => 'Mobile number cannot exceed 13 digits.'
+            ]
             //'numberHours' => 'required|integer|min:1',
         ]);
 
         try {
+            // Normalize the contact number before saving
+            $loadData['contact'] = $this->normalizePhoneNumber($contactInput);
+
             // Create a new teacher record
-            Teachers::create($loadData);
+            $teacher = Teachers::create($loadData);
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            // Log the error
+            \Log::error('Teacher creation failed', [
+                'error' => $e->getMessage(),
+                'input' => $request->all()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Failed to add teacher. Please try again.')
+                ->withInput();
         }
 
-        return redirect()->route('admin.teacher')->with('success', 'Teacher added successfully!');
+        return redirect()->route('admin.teacher')
+            ->with('success', 'Teacher added successfully!');
+    }
+
+    // Helper method to normalize phone number
+    private function normalizePhoneNumber($number) {
+        // Remove all non-digit characters
+        $cleaned = preg_replace('/\D/', '', $number);
+
+        // Standardize to +639 format
+        if (strpos($cleaned, '09') === 0) {
+            return '+63' . substr($cleaned, 1);
+        } elseif (strpos($cleaned, '639') === 0) {
+            return '+' . $cleaned;
+        } elseif (strpos($cleaned, '9') === 0) {
+            return '+639' . $cleaned;
+        }
+
+        return $cleaned;
     }
 
     // Function for editing teacher loads

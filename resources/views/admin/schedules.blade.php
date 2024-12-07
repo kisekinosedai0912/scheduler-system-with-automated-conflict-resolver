@@ -435,9 +435,25 @@
                         minuteStep: 1
                     });
 
-                    new MultiSelectTag('days');
+                    function safeMultiSelectInit(selector) {
+                        try {
+                            const element = document.getElementById(selector);
+                            if (element) {
+                                new MultiSelectTag(selector);
+                            } else {
+                                console.warn(`Element with id ${selector} not found`);
+                            }
+                        } catch (error) {
+                            console.error(`Error initializing MultiSelectTag for ${selector}:`, error);
+                        }
+                    }
+
+                    // Initialize days multi-select
+                    safeMultiSelectInit('days');
+
+                    // Safely initialize edit-days multi-select for existing schedules
                     @foreach ($schedules as $schedule)
-                        new MultiSelectTag('edit-days-{{ $schedule->id }}');
+                        safeMultiSelectInit('edit-days-{{ $schedule->id }}');
                     @endforeach
 
                     // Function to handle subject filtering based on category selection of the subjects
@@ -585,38 +601,66 @@
                     });
 
                     // Time formatting function
-                    function formatTimeFor24HourFormat(timeString) {
-                        if (/^\d{2}:\d{2}:\d{2}$/.test(timeString)) {
-                            return timeString;
+                    function formatTimeForServer(time) {
+                        // If time is already in HH:mm:ss format, return as is
+                        if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
+                            return time;
                         }
 
-                        const parsedTime = moment(timeString, [
+                        // Parsing with multiple formats
+                        const formats = [
                             'h:mm A',   // 12-hour format with AM/PM
-                            'HH:mm',    // 24-hour format
-                            'H:mm',     // 24-hour format without leading zero
+                            'H:mm',     // 24-hour format
+                            'HH:mm',    // Padded 24-hour format
                             'hh:mm A',  // Padded 12-hour format
-                        ]);
+                            'h:mm a',   // Lowercase am/pm
+                        ];
 
+                        // Try parsing the time using moment.js library
+                        const parsedTime = moment(time, formats);
+
+                        // Check if parsing was successful
                         if (parsedTime.isValid()) {
                             return parsedTime.format('HH:mm:ss');
                         }
 
-                        console.error('Unable to parse time:', timeString);
-                        return moment().format('HH:mm:ss');
+                        // Fallback or error handling
+                        console.error('Unable to parse time:', time);
+
+                        // If parsing fails, show an alert to the user
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Time Format',
+                            text: `Unable to parse the time: ${time}. Please use formats like 9:30 AM, 14:30, etc.`
+                        });
+
+                        return moment().format('HH:mm:ss'); // Return current time if parsing fails
                     }
 
                     // Update the error handling in the form submission
                     $('#schedules-form').on('submit', function(event) {
-                        event.preventDefault();
+                        event.preventDefault(); // Prevent default form submission
+
+                        // Get raw time values
+                        const rawStartTime = $('#start-time').val();
+                        const rawEndTime = $('#end-time').val();
 
                         // Get and format times
-                        const startTime = formatTimeFor24HourFormat($('#start-time').val());
-                        const endTime = formatTimeFor24HourFormat($('#end-time').val());
+                        const startTime = formatTimeForServer(rawStartTime);
+                        const endTime = formatTimeForServer(rawEndTime);
 
-                        // Created a copy of the form data
+                        // Check if time formatting failed
+                        if (!startTime || !endTime) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Invalid Time Format',
+                                text: 'Please enter valid start and end times.'
+                            });
+                            return;
+                        }
+
+                        // Create a copy of the form data
                         const formData = new FormData(this);
-
-                        // Manually set the formatted times
                         formData.set('startTime', startTime);
                         formData.set('endTime', endTime);
 
@@ -631,66 +675,81 @@
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'Accept': 'application/json'
                             },
-                            error: function(xhr, status, error) {
-                                // Log the full response for debugging
-                                console.log('Full Error Response:', xhr.responseJSON);
+                            success: function(response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: response.message || 'Schedule created successfully'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            },
+                            error: function(xhr) {
+                                console.log('Full Error Response:', xhr);
 
-                                // Specifically handle 409 Conflict
-                                if (xhr.status === 409) {
+                                // Check specifically for conflict status
+                                if (xhr.status === 409 ||
+                                    (xhr.responseJSON && xhr.responseJSON.status === 'conflict')) {
+
+                                    // Use responseJSON to get conflict details
                                     const response = xhr.responseJSON;
 
-                                    // Hide the create schedule modal
+                                    // Ensure modal is hidden first
                                     $('#scheduleModal').modal('hide');
 
-                                    // Open the resolve conflict modal with the entire response
-                                    openResolveModal(response);
+                                    // Slight delay to ensure modal is closed
+                                    setTimeout(() => {
+                                        // Open conflict resolution modal
+                                        openConflictResolveModal(response);
+                                    }, 300);
                                 } else {
-                                    // Generic error handling
+                                    // Handle other types of errors
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
-                                        text: xhr.responseJSON?.message || 'An unexpected error occurred. Please try again.'
+                                        text: xhr.responseJSON?.message || 'An unexpected error occurred',
+                                        confirmButtonColor: '#223a5e'
                                     });
                                 }
                             }
                         });
                     });
 
-                    // Modify the openResolveModal function to be more defensive
-                    function openResolveModal(response) {
+                    // Modify the openConflictResolveModal function to ensure proper display
+                    function openConflictResolveModal(response) {
                         try {
-                            // Destructure the response with proper key names
-                            const {
-                                original_schedule = {},
-                                available_slots = []
-                            } = response;
+                            console.log('Opening Conflict Resolve Modal', response);
 
-                            // Safely extract details
-                            const teacherName = original_schedule.teacher_name || 'Unknown Teacher';
-                            const subjectName = original_schedule.subject_name || 'N/A';
-                            const semester = original_schedule.semester || 'N/A';
-                            const days = original_schedule.days || 'N/A';
-                            const startTime = formatTime(original_schedule.start_time);
-                            const endTime = formatTime(original_schedule.end_time);
+                            // Ensure the response has the expected structure
+                            if (!response || !response.original_schedule || !response.available_slots) {
+                                throw new Error('Invalid conflict response structure');
+                            }
 
-                            // Populate teacher and conflict information
-                            $('#teacherName').text(teacherName);
-                            $('#conflictedSchedule').text(
-                                `Semester: ${semester}, ` +
-                                `Subject: ${subjectName}, ` +
-                                `Days: ${days}, ` +
-                                `Time: ${startTime} - ${endTime}`
-                            );
+                            const originalSchedule = response.original_schedule;
+                            const availableSlots = response.available_slots;
 
-                            let slotsTableBody = $('#resolveScheduleModal tbody');
+                            // Update modal content
+                            $('#teacherName').text(originalSchedule.teacher_name || 'Unknown Teacher');
+
+                            // Format schedule details
+                            const conflictDetails = `
+                                Semester: ${originalSchedule.semester || 'N/A'}<br>
+                                Subject: ${originalSchedule.subject_name || 'N/A'}<br>
+                                Days: ${originalSchedule.days || 'N/A'}<br>
+                                Time: ${formatTime(originalSchedule.start_time)} - ${formatTime(originalSchedule.end_time)}
+                            `;
+                            $('#conflictedSchedule').html(conflictDetails);
+
+                            // Clear and populate available slots
+                            const slotsTableBody = $('#resolveScheduleModal tbody');
                             slotsTableBody.empty();
 
-                            // Store original schedule data globally for later use
-                            window.originalScheduleData = original_schedule;
+                            // Store original schedule data globally
+                            window.originalScheduleData = originalSchedule;
 
-                            // Handle available slots
-                            if (available_slots && available_slots.length > 0) {
-                                available_slots.forEach(slot => {
+                            // Populate available slots
+                            if (availableSlots && availableSlots.length > 0) {
+                                availableSlots.forEach(slot => {
                                     const row = `
                                         <tr data-day="${slot.day}"
                                             data-start-time="${slot.start_time}"
@@ -709,7 +768,6 @@
                                     slotsTableBody.append(row);
                                 });
                             } else {
-                                // No available slots
                                 slotsTableBody.html(`
                                     <tr>
                                         <td colspan="4" class="text-center text-danger">
@@ -719,17 +777,32 @@
                                 `);
                             }
 
-                            // Show the resolve modal
-                            $('#resolveScheduleModal').removeClass('hidden');
+                            // Show the modal
+                            const resolveModal = document.getElementById('resolveScheduleModal');
+
+                            // Remove hidden class and make visible
+                            resolveModal.classList.remove('hidden');
+                            resolveModal.style.display = 'block';
+                            resolveModal.setAttribute('aria-hidden', 'false');
+
+                            // Ensure modal is on top of other elements
+                            resolveModal.style.zIndex = '1050';
+                            resolveModal.style.position = 'fixed';
+                            resolveModal.style.top = '0';
+                            resolveModal.style.left = '0';
+                            resolveModal.style.width = '100%';
+                            resolveModal.style.height = '100%';
+                            resolveModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
 
                         } catch (error) {
-                            console.error('Error in openResolveModal:', error);
+                            console.error('Error in openConflictResolveModal:', error);
 
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Modal Error',
                                 text: 'An error occurred while preparing the conflict resolution modal.',
-                                footer: error.message
+                                footer: error.message,
+                                confirmButtonColor: '#223a5e'
                             });
                         }
                     }
@@ -757,10 +830,8 @@
                         if (selectedSlots.length > 0 && window.originalScheduleData) {
                             const formData = new FormData();
 
-                            // Debugging: Log the original schedule data
                             console.log('Original Schedule Data:', window.originalScheduleData);
 
-                            // Explicitly check and add each required field
                             const requiredFields = [
                                 'teacher_id',
                                 'semester',
@@ -822,7 +893,16 @@
                                 processData: false,
                                 contentType: false,
                                 success: function(response) {
-                                    window.location.href = "{{ route('admin.schedules') }}";
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Schedule Created Successfully!',
+                                        text: response.message || 'Your schedule has been successfully created.',
+                                        timer: 2000,
+                                        timerProgressBar: true,
+                                        didClose: () => {
+                                            window.location.href = "{{ route('admin.schedules') }}";
+                                        }
+                                    });
                                 },
                                 error: function(xhr, status, error) {
                                     console.error('Full Error Response:', xhr);
@@ -892,34 +972,6 @@
                             }
                         });
                     });
-
-                    // Helper function to format time for server
-                    function formatTimeForServer(time) {
-                        // If time is already in HH:mm:ss format, return as is
-                        if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
-                            return time;
-                        }
-
-                        // Parsing with multiple formats
-                        const formats = [
-                            'h:mm A',   // 12-hour format with AM/PM
-                            'H:mm',     // 24-hour format
-                            'HH:mm',    // Padded 24-hour format
-                            'hh:mm A',  // Padded 12-hour format
-                        ];
-
-                        // Try parsing the time using moment.js library
-                        const parsedTime = moment(time, formats);
-
-                        // Check if parsing was successful
-                        if (parsedTime.isValid()) {
-                            return parsedTime.format('HH:mm:ss');
-                        }
-
-                        // Fallback or error handling
-                        console.error('Unable to parse time:', time);
-                        return moment().format('HH:mm:ss'); // Return current time if parsing fails
-                    }
 
                     // Helper function to get full day name
                     function getDayFullName(shortDay) {

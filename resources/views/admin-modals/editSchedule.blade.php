@@ -29,7 +29,7 @@
 
                             <!-- Semester Dropdown -->
                             <div>
-                                <label for="edit-semester-select-{{ $schedule->id }}" class="block mb-2 font-medium">Edit Semester</label>
+                                <label for="edit-semester-select-{{ $schedule->id }}" class="block mb-2 font-medium">Semester</label>
                                 <select id="edit-semester-select-{{ $schedule->id }}" name="semester" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Semester</option>
                                     @foreach($subjects->unique('semester') as $subject)
@@ -40,9 +40,22 @@
                                 </select>
                             </div>
 
+                            <!-- Strand Dropdown -->
+                            <div>
+                                <label for="edit-strand-select-{{ $schedule->id }}" class="block mb-2 font-medium">Strand</label>
+                                <select id="edit-strand-select-{{ $schedule->id }}" name="strand" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
+                                    <option value="">Select strand</option>
+                                    @foreach($schedules->unique('strand') as $schedule)
+                                        <option value="{{ $schedule->strand }}" {{ $schedule->strand == $schedule->strand ? 'selected' : '' }}>
+                                            {{ $schedule->strand }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <!-- Category Dropdown -->
                             <div>
-                                <label for="edit-category-select-{{ $schedule->id }}" class="block mb-2 font-medium">Select Category</label>
+                                <label for="edit-category-select-{{ $schedule->id }}" class="block mb-2 font-medium">Category</label>
                                 <select id="edit-category-select-{{ $schedule->id }}" name="categoryName" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Category</option>
                                     @foreach($subjects->unique('category') as $subject)
@@ -55,7 +68,7 @@
 
                             <!-- Days Multiselect -->
                             <div>
-                                <label for="edit-days-{{ $schedule->id }}" class="block mb-2 font-medium">Select Days</label>
+                                <label for="edit-days-{{ $schedule->id }}" class="block mb-2 font-medium">Days</label>
                                 <select id="edit-days-{{ $schedule->id }}" name="days[]" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]" multiple>
                                     @php
                                         $selectedDays = explode('-', $schedule->days);
@@ -70,7 +83,7 @@
 
                             <!-- Subject Dropdown -->
                             <div>
-                                <label for="subject_id-{{ $schedule->id }}" class="block mb-2 font-medium">Select Subject</label>
+                                <label for="subject_id-{{ $schedule->id }}" class="block mb-2 font-medium">Subject</label>
                                 <select name="subject_id" id="subject_id-{{ $schedule->id }}" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Subject</option>
                                     @foreach($subjects->where('category', $schedule->categoryName) as $subject)
@@ -83,7 +96,7 @@
 
                             <!-- Room Dropdown -->
                             <div>
-                                <label for="room-{{ $schedule->id }}" class="block mb-2 font-medium">Select Room</label>
+                                <label for="room-{{ $schedule->id }}" class="block mb-2 font-medium">Room</label>
                                 <select name="room_id" id="room-{{ $schedule->id }}" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Room</option>
                                     @foreach($classrooms as $classroom)
@@ -96,7 +109,7 @@
 
                             <!-- Year Dropdown -->
                             <div>
-                                <label for="edit-year" class="block mb-2 font-medium">Select Year</label>
+                                <label for="edit-year" class="block mb-2 font-medium">Year</label>
                                 <select name="year" id="edit-year" class="form-control w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#223a5e]">
                                     <option value="">Select Year</option>
                                     @foreach($schedules->unique('year') as $yearOption)
@@ -114,7 +127,7 @@
                             </div>
 
                             <!-- Time Inputs -->
-                            <div class="col-span-2 grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label for="start-time-{{ $schedule->id }}" class="block mb-2 font-medium">Start Time</label>
                                     <input type="text" name="startTime" id="start-time-{{ $schedule->id }}"

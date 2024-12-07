@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'infobip' => [
+        'base_url' => env('INFOBIP_BASE_URL', 'nme4v2.api.infobip.com'),
+        'api_key' => env('INFOBIP_API_KEY'),
+        'sender_id' => env('INFOBIP_SENDER_ID', 'SCSHSAdmin'),
+    ],
+
 ];

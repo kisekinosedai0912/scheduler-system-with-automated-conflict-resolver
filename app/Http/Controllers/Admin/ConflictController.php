@@ -280,16 +280,49 @@ class ConflictController extends Controller
                 'year' => 'required|in:Grade 11,Grade 12',
                 'section' => 'required|string',
                 'room_id' => 'required|exists:classroom,id',
-                'startTime' => 'required|date_format:H:i:s',
-                'endTime' => 'required|date_format:H:i:s',
+                'days' => 'required|array|min:1',
+                'startTime' => [
+                    'required',
+                    function ($attribute, $value, $fail) use ($parsedStartTime) {
+                        if (!$parsedStartTime) {
+                            $fail('Invalid start time format.');
+                        }
+                    }
+                ],
+                'endTime' => [
+                    'required',
+                    function ($attribute, $value, $fail) use ($parsedStartTime, $parsedEndTime) {
+                        if (!$parsedEndTime) {
+                            $fail('Invalid end time format.');
+                        }
+
+                        // Convert times to Carbon for comparison
+                        $start = Carbon::parse($parsedStartTime);
+                        $end = Carbon::parse($parsedEndTime);
+
+                        if ($end <= $start) {
+                            $fail('End time must be after start time.');
+                        }
+                    }
+                ],
             ], [
                 'year.in' => 'Please select either Grade 11 or Grade 12.',
+                'days.required' => 'Please select at least one day.',
+                'days.min' => 'Please select at least one day.',
+                'startTime.required' => 'Start time is required.',
+                'endTime.required' => 'End time is required.',
             ]);
 
             // Check validation first
             if ($validator->fails()) {
+                \Log::error('Validation Errors', [
+                    'errors' => $validator->errors()->toArray(),
+                    'input_data' => $request->all()
+                ]);
+
                 return response()->json([
                     'status' => 'error',
+                    'message' => 'Validation failed',
                     'errors' => $validator->errors()
                 ], 422);
             }
@@ -404,6 +437,9 @@ class ConflictController extends Controller
      * @throws \Exception If time cannot be parsed
      */
     private function parseTime($time) {
+        // Trim any whitespace
+        $time = trim($time);
+
         // List of possible time formats to try
         $formats = [
             'H:i:s',     // 24-hour with seconds
@@ -411,20 +447,36 @@ class ConflictController extends Controller
             'h:i A',     // 12-hour with AM/PM
             'h:i:s A',   // 12-hour with seconds and AM/PM
             'h:i a',     // Lowercase am/pm
-            'H:i a'      // 24-hour with lowercase am/pm
+            'H:i a',     // 24-hour with lowercase am/pm
+            'h:mm A',    // Alternative 12-hour format
+            'H:mm',      // Alternative 24-hour format
         ];
 
         // Try parsing with different formats
         foreach ($formats as $format) {
             try {
                 $parsedTime = Carbon::createFromFormat($format, $time);
+
+                // Log successful parsing for debugging
+                \Log::info('Time parsed successfully', [
+                    'original_time' => $time,
+                    'format' => $format,
+                    'parsed_time' => $parsedTime->format('H:i:s')
+                ]);
+
                 return $parsedTime->format('H:i:s');
             } catch (\Exception $e) {
+                // Continue to next format
                 continue;
             }
         }
 
-        // If no format works, throw an exception with details
+        // If no format works, log the failure and throw an exception
+        \Log::error('Unable to parse time', [
+            'time' => $time,
+            'supported_formats' => $formats
+        ]);
+
         throw new \Exception("Unable to parse time: {$time}. Supported formats: " . implode(', ', $formats));
     }
 

@@ -56,9 +56,14 @@
     </header>
 
     <div class="px-4" id="schedule-container">
-        <p class="mb-3">
-            <b>TEACHER:</b> {{ strtoupper($teacher->teacherName) }}
-        </p>
+        <div class="flex items-center justify-between">
+            <p class="mb-3">
+                <b>TEACHER:</b> {{ strtoupper($teacher->teacherName) }}
+            </p>
+            <p>
+                <b>TOTAL LOADED HOURS:</b> {{ strtoupper($teacher->numberHours) }}
+            </p>
+        </div>
         <table class="schedule-table mx-auto">
             <thead>
                 <tr class="bg-gray-200">
