@@ -410,7 +410,6 @@ class AdminController extends Controller
                 'contact.min' => 'Mobile number must be at least 10 digits.',
                 'contact.max' => 'Mobile number cannot exceed 13 digits.'
             ]
-            //'numberHours' => 'required|integer|min:1',
         ]);
 
         try {
@@ -460,20 +459,36 @@ class AdminController extends Controller
 
     // Function for updating teacher loads
     public function updateLoad(Request $request, $id) {
+        // Remove non-digit characters from contact input
+        $contactInput = preg_replace('/\D/', '', $request->input('contact'));
+        $request->merge(['contact' => $contactInput]);
+
         $request->validate([
             'teacherName' => 'required|string',
             'email' => 'required|string',
-            'contact' => 'required|string',
+            'contact' => [
+                'required',
+                'string',
+                'min:10',
+                'max:13',
+                'regex:/^(09|\+639|639)\d{9}$/'
+            ]
+        ], [
+            'contact.regex' => 'Please enter a valid Philippine mobile number (09/+639/639 format).',
+            'contact.min' => 'Mobile number must be at least 10 digits.',
+            'contact.max' => 'Mobile number cannot exceed 13 digits.'
         ]);
 
         try {
             $teacher = Teachers::findOrFail($id);
+
+            // Normalize the contact number before saving
+            $normalizedContact = $this->normalizePhoneNumber($contactInput);
+
             $teacher->update([
                 'teacherName' => $request->input('teacherName'),
                 'email' => $request->input('email'),
-                //'subject_id' => Subjects::where('subjectName', $request->input('subjectName'))->first()->id,
-                'contact' => $request->input('contact'),
-                // 'numberHours' => $request->input('numberHours')
+                'contact' => $normalizedContact,
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
