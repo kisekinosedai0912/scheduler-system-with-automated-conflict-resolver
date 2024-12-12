@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $monthName ? $monthName . ' ' : '' }}Calendar of Events - S.Y. {{ $schoolYear }}</title>
+    <title>{{ $monthName ?? '' }} Calendar of Events - S.Y. {{ $schoolYear }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -46,17 +46,14 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
         header p {
-            margin: 0; /* Remove default margin */
-            line-height: 1.2;
-            font-size: 0.9rem;
+            margin: 0;
             font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
         }
         .header-title {
-            text-align: center;
-            margin-top: 10px;
             font-size: 1.5em;
             font-weight: 700;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            margin-top: 10px;
         }
         table {
             width: 100%;
@@ -98,46 +95,68 @@
             margin-top: 20px;
             width: 100%;
         }
-
         footer p {
             max-width: 600px;
             line-height: 1.5;
         }
+
+        .month-header {
+            background-color: #e6e6e6;
+            color: #223a5e;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 20mm 15mm 20mm 15mm;
+            }
             * {
                 -webkit-print-color-adjust: exact !important;
                 color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                font-family: 'Roboto', sans-serif;
             }
             body {
                 background-color: white !important;
+                font-size: 12px;
             }
             .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
                 box-shadow: none;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
             }
             header {
                 background: linear-gradient(135deg, #223a5e 0%, #223a5e 100%) !important;
                 color: white !important;
-                -webkit-print-color-adjust: exact !important;
+                padding: 10px;
             }
-            thead {
-                background-color: #223a5e !important;
-                color: white !important;
+            h2.header-title {
+                font-size: 1.3em;
+                font-weight: 700;
+                margin: 10px 0;
             }
-            tbody tr:nth-child(even) {
-                background-color: #f9f9f9 !important;
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
             }
-            table, th, td {
-                border: 1px solid #e0e0e0 !important;
+            th, td {
+                padding: 10px 12px;
+                text-align: left;
+                border: 1px solid #e0e0e0;
+            }
+            .month-header {
+                background-color: #e6e6e6 !important;
+                color: #223a5e !important;
             }
             footer {
                 background: linear-gradient(135deg, #223a5e 0%, #223a5e 100%) !important;
                 color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                margin-top: 10px;
+                padding: 10px;
+                font-size: 10px;
             }
         }
     </style>
@@ -155,54 +174,51 @@
                 </div>
             </div>
             <h2 class="header-title">
-                @if(isset($monthName))
-                    {{ $monthName }} CALENDAR OF EVENTS <br>(S.Y {{ $schoolYear }})
+                @if($fromDate && $untilDate)
+                    SENIOR HIGH SCHOOL CALENDAR OF EVENTS<br>
+                    ({{ Carbon\Carbon::parse($fromDate)->format('F Y') }} - {{ Carbon\Carbon::parse($untilDate)->format('F Y') }})<br>
+                    S.Y {{ $schoolYear }}
                 @else
                     SENIOR HIGH SCHOOL CALENDAR OF EVENTS <br>(S.Y {{ $schoolYear }})
                 @endif
             </h2>
         </header>
 
-        @if($events->isEmpty())
-            <div class="no-events">
-                <p>
-                    @if($monthName)
-                        No events scheduled for {{ $monthName }}.
-                    @else
-                        No events scheduled for this school year.
-                    @endif
-                </p>
-            </div>
-        @else
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 70%;">
-                            @if($monthName)
-                                {{ $monthName }} Events
-                            @else
-                                School Year Events
-                            @endif
-                        </th>
-                        <th style="width: 30%" class="text-right">Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($events as $event)
+        <div class="table-container">
+            @if($eventsByMonth->isEmpty())
+                <div class="no-events">
+                    <p>No events scheduled for the selected period.</p>
+                </div>
+            @else
+                <table>
+                    <thead>
                         <tr>
-                            <td>{{ $event->eventTitle }}</td>
-                            <td class="text-right">
-                                @if ($event->startDate == $event->endDate)
-                                    {{ \Carbon\Carbon::parse($event->startDate)->format('F j, Y') }}
-                                @else
-                                    {{ \Carbon\Carbon::parse($event->startDate)->format('F j') }} - {{ \Carbon\Carbon::parse($event->endDate)->format('F j, Y') }}
-                                @endif
-                            </td>
+                            <th style="width: 70%;">Event</th>
+                            <th style="width: 30%;" class="text-right">Date</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
+                    </thead>
+                    <tbody>
+                        @foreach($eventsByMonth as $month => $monthEvents)
+                            <tr class="month-header">
+                                <td colspan="2">{{ $month }}</td>
+                            </tr>
+                            @foreach($monthEvents as $event)
+                                <tr class="event-row">
+                                    <td>{{ $event->eventTitle }}</td>
+                                    <td class="text-right">
+                                        @if ($event->startDate == $event->endDate)
+                                            {{ Carbon\Carbon::parse($event->startDate)->format('F j, Y') }}
+                                        @else
+                                            {{ Carbon\Carbon::parse($event->startDate)->format('F j') }} - {{ Carbon\Carbon::parse($event->endDate)->format('F j, Y') }}
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        </div>
 
         <footer>
             <p>&copy; 2024 Sagay City National High School Stand Alone. All rights reserved.</p>
@@ -211,7 +227,6 @@
 
     <script>
         (function() {
-            // Function to close the page if close is clicked from the page
             function safeWindowClose() {
                 try {
                     window.close();
@@ -224,9 +239,7 @@
             }
 
             window.onload = function() {
-                // Check if monthEvents are passed from the parent window
                 if (window.opener && window.opener.monthEvents) {
-                    // Fetch the route for creating and event
                     fetch("{{ route('print-calendar') }}", {
                         method: 'POST',
                         headers: {
@@ -255,7 +268,6 @@
                         setTimeout(safeWindowClose, 1000);
                     });
                 } else {
-                    // Print all events if no specific month to print is selected
                     window.print();
 
                     window.onafterprint = safeWindowClose;

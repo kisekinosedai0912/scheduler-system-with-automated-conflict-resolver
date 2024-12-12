@@ -6,7 +6,6 @@
         <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
-        <!-- Rest of your existing styles -->
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.12/dist/sweetalert2.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/css/bootstrap-timepicker.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.1.0/dist/css/multi-select-tag.css">
@@ -274,7 +273,6 @@
                 <th>Category</th>
                 <th>Subject</th>
                 <th class="text-center">Room</th>
-                {{-- <th class="text-center">Student #</th> --}}
                 <th>Grade</th>
                 <th>Section</th>
                 <th class="text-center">Day/s</th>
@@ -293,7 +291,6 @@
                     <td class="text-md font-light">{{ $schedule->categoryName }}</td>
                     <td class="text-md font-light">{{ $schedule->subject->subjectName }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->classroom->roomName }}</td>
-                    {{-- <td class="text-md font-light text-center">{{ $schedule->studentNum }}</td> --}}
                     <td class="text-md font-light">{{ $schedule->year }}</td>
                     <td class="text-md font-light">{{ $schedule->section }}</td>
                     <td class="text-md font-light text-center">{{ $schedule->days }}</td>
@@ -715,7 +712,7 @@
                         });
                     });
 
-                    // Modify the openConflictResolveModal function to ensure proper display
+                    //function to open the resolve modal if there is a conflict
                     function openConflictResolveModal(response) {
                         try {
                             console.log('Opening Conflict Resolve Modal', response);
@@ -822,8 +819,8 @@
 
                             selectedSlots.push({
                                 day: day,
-                                startTime: formatTimeForServer(startTime + ':00'), // Append seconds
-                                endTime: formatTimeForServer(endTime + ':00')      // Append seconds
+                                startTime: formatTimeForServer(startTime + ':00'),
+                                endTime: formatTimeForServer(endTime + ':00')
                             });
                         });
 
@@ -932,7 +929,7 @@
                                                     <li>Ensure all required fields are filled</li>
                                                     <li>Check that you've selected a valid section</li>
                                                     <li>Verify all schedule details</li>
-                                                                                </ul>
+                                                </ul>
                                             </div>
                                         `
                                     });
@@ -962,6 +959,9 @@
                             if (result.isConfirmed) {
                                 // Close the conflict resolution modal
                                 $('#resolveScheduleModal').addClass('hidden');
+                                $('#resolveScheduleModal').hide();
+                                $('body').removeClass('modal-open');
+                                $('.modal-backdrop').remove();
                                 $('#schedules-form')[0].reset();
                             } else if (result.dismiss === Swal.DismissReason.cancel) {
                                 // Close the conflict resolution modal

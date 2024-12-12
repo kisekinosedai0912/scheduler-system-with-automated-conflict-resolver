@@ -227,9 +227,9 @@ class AdminController extends Controller
                 'endDate' => $request->endDate,
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage()); // Redirect back with an excption error message
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
-        return response()->json('Event updated successfully'); // Return a json response if successfull
+        return response()->json('Event updated successfully');
     }
 
     // Function for deleting events in the calendar

@@ -37,6 +37,22 @@
                     <option value="12">December</option>
                 </select>
 
+                <!-- From Date Dropdown -->
+                <select id="from-date" class="form-control mr-2 w-[150px]">
+                    <option value="">From Month</option>
+                    @foreach(range(1, 12) as $month)
+                        <option value="{{ $month }}">{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                    @endforeach
+                </select>
+
+                <!-- Until Date Dropdown -->
+                <select id="until-date" class="form-control mr-2 w-[150px]">
+                    <option value="">Until Month</option>
+                    @foreach(range(1, 12) as $month)
+                        <option value="{{ $month }}">{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
+                    @endforeach
+                </select>
+
                 <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-lg flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="print-button">
                     <span class="font-medium">Print</span>
                     <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -430,38 +446,47 @@
                     $('#calendar').fullCalendar('addEventSource', filteredEvents);
                 });
 
-                // Function to export calendar data in excel file
-                // $('#print-button').on('click', function() {
-                //     // Option 1: Open in a new tab for printing
-                //     window.open("{{ route('print-calendar') }}", '_blank');
-
-                //     // Option 2: If you want to keep the Excel export functionality
-                //     if (events.length > 0) {
-                //         let eventList = events.map(event => ({
-                //             Title: event.title,
-                //             StartDate: moment(event.start).format('YYYY-MM-DD'),
-                //             EndDate: event.end ? moment(event.end).format('YYYY-MM-DD') : 'No end date',
-                //             StartTime: moment(event.start).format('HH:mm'),
-                //             EndTime: event.end ? moment(event.end).format('HH:mm') : 'No end time'
-                //         }));
-
-                //         // let ws = XLSX.utils.json_to_sheet(eventList);
-                //         // let wb = XLSX.utils.book_new();
-                //         // XLSX.utils.book_append_sheet(wb, ws, "Calendar Events");
-                //         // XLSX.writeFile(wb, "Calendar_Events.xlsx");
-                //     } else {
-                //         alert('No events to export.');
-                //     }
-                // });
-
                 $('#print-button').on('click', function() {
+                    let fromDate = $('#from-date').val();
+                    let untilDate = $('#until-date').val();
                     let selectedMonth = $('#month-select').val();
 
-                    // If a specific month is selected, include it in the URL
-                    if (selectedMonth) {
+                    console.log("From Date:", fromDate);
+                    console.log("Until Date:", untilDate);
+
+                    // Case 1: Date range selected
+                    if (fromDate && untilDate) {
+                        // Add the current year to the selected month (e.g., 08 => 2024-08-01)
+                        const currentYear = new Date().getFullYear();
+
+                        const formattedFromDate = `${currentYear}-${fromDate}-01`;  // "01" sets the date to the first of the month
+                        const formattedUntilDate = `${currentYear}-${untilDate}-01`;
+
+                        // Set untilDate to last day of the month
+                        const untilDateObj = new Date(formattedUntilDate);
+                        untilDateObj.setMonth(untilDateObj.getMonth() + 1);  // Move to next month
+                        untilDateObj.setDate(0);  // Set it to the last day of the previous month
+
+                        // Reformat the "until" date to "YYYY-MM-DD" format
+                        const finalUntilDate = untilDateObj.toISOString().split('T')[0];
+
+                        // Open the URL with the query parameters
+                        window.open(`{{ route('print-calendar') }}?from=${formattedFromDate}&until=${finalUntilDate}`, '_blank');
+                    }
+                    // Case 2: Specific month selected
+                    else if (selectedMonth) {
                         window.open(`{{ route('print-calendar') }}?month=${selectedMonth}`, '_blank');
-                    } else {
-                        // Print all events
+                    }
+                    // Case 3: Incomplete date range
+                    else if (fromDate || untilDate) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Incomplete Date Range',
+                            text: 'Please select both "From" and "Until" dates.'
+                        });
+                    }
+                    // Case 4: No selection, print all events
+                    else {
                         window.open("{{ route('print-calendar') }}", '_blank');
                     }
                 });

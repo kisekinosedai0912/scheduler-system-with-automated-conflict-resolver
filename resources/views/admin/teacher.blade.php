@@ -27,7 +27,7 @@
                 @endforeach
             </select>
 
-            <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="printBtn">
+            {{-- <button class="button bg-gradient-to-r from-[#d3d3d3] to-[#c0c0c0] text-gray-800 border border-transparent rounded-full flex items-center gap-1.5 px-3 py-2 shadow-custom transition-transform duration-300 hover:border-[#a9a9a9] active:transform active:scale-95 active:shadow-custom-active" id="printBtn">
                 <span class="font-medium">Print</span>
                 <svg stroke-linejoin="round" stroke-linecap="round" fill="none" stroke="currentColor" stroke-width="1.5"
                     viewBox="0 0 24 24"
@@ -40,7 +40,7 @@
                     <path d="M7 11l5 5l5 -5"></path>
                     <path d="M12 4l0 12"></path>
                 </svg>
-            </button>
+            </button> --}}
 
             <div>
                 <button
