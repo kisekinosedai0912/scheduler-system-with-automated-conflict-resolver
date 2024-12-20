@@ -16,9 +16,14 @@ class UserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->user_role == 'faculty') {
-            return $next($request);
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
-        return redirect()->back();
+
+        if (Auth::user()->user_role !== 'faculty') {
+            return redirect()->route('login')->with('error', 'Unauthorized access.');
+        }
+
+        return $next($request);
     }
 }

@@ -18,25 +18,23 @@ class ConflictController extends Controller
 {
     // Function for returning view in the schedule page of the admin dashboard
     public function schedules(Request $request) {
-        $query = Schedules::with(['teacher', 'subject', 'classroom'])->withTrashed();
+        $query = Schedules::with(['teacher', 'subject', 'classroom'])
+            ->select('schedules.*')  // Explicitly select schedules table columns
+            ->join('subjects', 'schedules.subject_id', '=', 'subjects.id');  // Join with subjects table
 
         // Semester Filtering
         if ($request->has('semester') && $request->input('semester') !== '') {
-            $query->whereHas('subject', function($q) use ($request) {
-                $q->where('semester', $request->input('semester'));
-            });
+            $query->where('subjects.semester', $request->input('semester'));
         }
 
         // Strand Filtering
         if ($request->has('strand') && $request->input('strand') !== '') {
-            $query->whereHas('subject', function($q) use ($request) {
-                $q->where('strand', $request->input('strand'));
-            });
+            $query->where('subjects.strand', $request->input('strand'));
         }
 
         // Teacher Filtering
         if ($request->has('teacher') && $request->input('teacher') !== '') {
-            $query->where('teacher_id', $request->input('teacher'));
+            $query->where('schedules.teacher_id', $request->input('teacher'));
         }
 
         $schedules = $query->get();
@@ -84,7 +82,7 @@ class ConflictController extends Controller
                 $request->teacher_id,
                 $parsedStartTime,
                 $parsedEndTime,
-                $schedules->id, // Pass the current schedule ID to exclude it from conflict check
+                $schedules->id,
                 $daysString,
                 $request->input('section'),
                 $request->input('room_id')

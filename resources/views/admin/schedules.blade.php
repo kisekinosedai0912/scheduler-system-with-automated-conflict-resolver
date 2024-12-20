@@ -387,6 +387,7 @@
                         const semester = urlParams.get('semester');
                         if (semester) {
                             $('#semesterSelect').val(semester);
+                            console.log(semester)
                         }
 
                         // Set strand dropdown

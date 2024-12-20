@@ -4,10 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class PreventBackHistory
 {
     /**
      * Handle an incoming request.
@@ -16,14 +15,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
+        $response = $next($request);
 
-        if (Auth::user()->user_role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Unauthorized access.');
-        }
+        $response->headers->add([
+            'Cache-Control' => 'nocache, no-store, max-age=0, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT'
+        ]);
 
-        return $next($request);
+        return $response;
     }
 }

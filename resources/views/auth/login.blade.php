@@ -93,15 +93,6 @@
                                 Log in
                             </x-primary-button>
                         </div>
-
-                        <div class="mt-6 text-center">
-                            <p class="text-sm text-gray-600">
-                                Don't have an account?
-                                <a href="{{ route('register') }}" class="font-medium text-[#223a5e] hover:text-[#3a5e8c]">
-                                    Register here
-                                </a>
-                            </p>
-                        </div>
                     </form>
                 </div>
             </div>

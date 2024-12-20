@@ -8,6 +8,7 @@ use App\Models\Schedules;
 use App\Models\Teachers;
 use App\Models\Classroom;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PrintController extends Controller
 {

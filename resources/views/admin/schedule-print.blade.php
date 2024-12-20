@@ -50,7 +50,7 @@
         <img src="{{ asset('/images/depedLogo.png') }}" alt="deped logo" width="90" height="90" class="block mx-auto mb-4">
         <h1 class="text-xl font-bold text-center mb-6">
             SAGAY CITY SENIOR HIGH SCHOOL <br>
-            HUMMS {{ strtoupper($year) }} SCHEDULE OF CLASSES <br>
+            {{ strtoupper($year) }} SCHEDULE OF CLASSES <br>
             {{ strtoupper($semester) }} - {{ $schoolYear }} <br>
         </h1>
     </header>

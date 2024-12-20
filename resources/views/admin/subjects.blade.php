@@ -95,7 +95,7 @@
                                         <option value="IAS">Industrial Arts Strand</option>
                                         <option value="HE">Home Economics Strand</option>
                                         <option value="ICT">Information & Communications Technology Strand</option>
-                                        <option value="HUMMS">Humanities and Social Sciences Strand</option>
+                                        <option value="HUMMSS">Humanities and Social Sciences Strand</option>
                                         <option value="GAS">General Economics Strand</option>
                                     </select>
                                 </div>
